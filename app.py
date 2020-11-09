@@ -4,6 +4,8 @@ from flask import Flask, render_template, request, url_for, flash, redirect, Res
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from werkzeug.exceptions import abort
 import torch
+import base64
+import io
 from detectron2.data import MetadataCatalog, DatasetCatalog
 import cv2
 from termcolor import colored
@@ -41,14 +43,9 @@ catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
 thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
 
-# Load models:
-# print('Loading models.')
-# models = load_models()  # about 13s
-# segnet = models['segnet']
-# segnet.model.cuda()  # TODO: cuda
-# repnet = models['repnet'].cuda()
-# pca = models['pca']
-supermodel = SuperModel()
+# Load Supermodel:
+#supermodel = SuperModel()
+supermodel = lambda x: (x, x, x)  # TODO: for debugging
 
 # Def augs:
 augs = load_augs(resize_to=RESIZE_TO)
@@ -56,7 +53,7 @@ augs = load_augs(resize_to=RESIZE_TO)
 
 def get_numpy_frame():
     ret, frame = videocap.read()  # frame [480, 640, 3] by default
-    #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     return frame
 
 
@@ -98,8 +95,8 @@ def index():
     elif 'start' in request.form:
         print('Starting video feed...')
         return redirect(url_for('show_feed'))
-
-    return render_template('index.html')
+    else:
+        return render_template('index.html')
 
 
 @app.route('/show_feed')
@@ -114,26 +111,21 @@ def video_feed():
 
 @app.route('/query_image')
 def query_image():
-    return render_template('query_image.html')
-
-
-@app.route('/get_query_image')
-def get_query_image():
     img = get_numpy_frame()  # [480, 640, 3] uint8 by default
     img = Image.fromarray(img)
-    img = augs['augs_base'](img)  # [256, .., 3] or [.., 256, 3]; torch.tensor!
+    img = augs['augs_base'](img)  # [256, .., 3] or [.., 256, 3]; stil PIL
     videocap.release()  # TODO: or not if want to retake?
 
     # supermodel out:
     code_global, pred_img, local_results = supermodel(img)
 
     # To jpeg for display:
-    img = np.array(img)  # back to numpy from tensor; uint8 but cropped
-    ret, jpeg = cv2.imencode('.jpg', img)
-    jpeg = jpeg.tobytes()
-    response = b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg + b'\r\n\r\n'
+    img_io = io.BytesIO()
+    img.convert('RGB').save(img_io, 'JPEG')
+    img_io.seek(0)
+    img = base64.b64encode(img_io.getvalue()).decode('ascii')
 
-    return Response(response, mimetype='multipart/x-mixed-replace; boundary=frame')
+    return render_template('query_image.html', img=img)
 
 
 @app.route('/<int:idx>')

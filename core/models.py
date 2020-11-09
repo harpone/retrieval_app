@@ -25,7 +25,7 @@ class SuperModel(nn.Module):
         # repnet:
         with torch.no_grad():
             self.repnet = resnet50x4()
-            repnet_pth = './resnet50-4x.pth'
+            repnet_pth = './model_data/resnet50-4x.pth'
             state_dict = torch.load(repnet_pth)['state_dict']
             self.repnet.load_state_dict(state_dict)
             self.repnet.eval()
