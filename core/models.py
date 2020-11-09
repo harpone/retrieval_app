@@ -4,9 +4,8 @@ from detectron2.config import get_cfg
 import torch
 import torch.nn as nn
 from joblib import load
-from resnet_wider import resnet50x4
 
-from resnet_wider import resnet50x4
+from core.resnet_wider import resnet50x4
 
 
 class JointModel(nn.Module):
@@ -64,13 +63,13 @@ def load_models():
     with torch.no_grad():
         # repnet:
         repnet = resnet50x4()  # TODO: no longer CUDA because I want CPU
-        repnet_pth = './resnet50-4x.pth'
+        repnet_pth = './model_data/resnet50-4x.pth'  # TODO: from GCS or cache
         state_dict = torch.load(repnet_pth)['state_dict']
         repnet.load_state_dict(state_dict)
         repnet.eval()
         repnet.cuda()
 
     # pca model (for per item codes):
-    pca = load('pca_simclr_8192.joblib')
+    pca = load('./model_data/pca_simclr_8192.joblib')  # TODO: from GCS or cache
 
     return dict(segnet=segnet, repnet=repnet, pca=pca)

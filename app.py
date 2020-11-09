@@ -3,10 +3,17 @@ import numpy as np
 from flask import Flask, render_template, request, url_for, flash, redirect, Response
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from werkzeug.exceptions import abort
+import torch
+from detectron2.data import MetadataCatalog, DatasetCatalog
 import cv2
 from termcolor import colored
 
 from core.dataio import Database
+from core.models import load_models
+from core.augs import load_augs
+from core.config import RESIZE_TO
+
+
 
 """
 'I was facing this problem while running the flask server in debug mode because it called cv2.VideoCapture(0) twice.'
@@ -24,6 +31,22 @@ print(colored('Video capture device initialized', 'green'))
 
 # Set up database:
 database = Database('/home/heka/database/test_50k.h5', mode='r')
+
+# for sanity checks:
+catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
+thing_classes = catalog.thing_classes
+stuff_classes = catalog.stuff_classes
+
+# Load models:
+print('Loading models.')
+models = load_models()  # about 13s
+segnet = models['segnet']
+segnet.model.cuda()  # TODO: cuda
+repnet = models['repnet'].cuda()
+pca = models['pca']
+
+# Def augs:
+augs = load_augs(resize_to=RESIZE_TO)
 
 
 def get_numpy_frame():
@@ -92,11 +115,13 @@ def query_image():
 @app.route('/get_query_image')
 def get_query_image():
     frame = get_numpy_frame()  # [480, 640, 3] uint8 by default
+    frame = augs['augs_base'](torch.tensor(frame))  # [256, .., 3] or [.., 256, 3]; torch.tensor!
     videocap.release()  # TODO: or not if want to retake?
 
     # TODO: do the ML stuff
 
     # To jpeg for display:
+    frame = frame.numpy()  # back to numpy from tensor
     ret, jpeg = cv2.imencode('.jpg', frame)
     jpeg = jpeg.tobytes()
     response = b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg + b'\r\n\r\n'
