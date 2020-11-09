@@ -13,19 +13,6 @@ from core.dataio import Database
 
 """
 
-# while(True):
-#
-#     ret, frame = cap.read()
-#
-#     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-#
-#     cv2.imshow('frame', gray)
-#     if cv2.waitKey(32) == 27:  # ESC will stop
-#         break
-#
-# cap.release()
-# cv2.destroyAllWindows()
-# print('DONE TEEEEEEEEEEEEEEEEEEEEEEEEEST')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
@@ -41,6 +28,7 @@ database = Database('/home/heka/database/test_50k.h5', mode='r')
 
 def get_numpy_frame():
     ret, frame = videocap.read()  # frame [480, 640, 3] by default
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     return frame
 
 
@@ -60,23 +48,9 @@ def get_entity(idx):
 
 
 def generate_feed():
-    try:
-        counter = 0
-        while True:
-            counter += 1
-            #if counter > 100:
-            #    break
-            jpeg = get_jpeg_frame()
-            yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg + b'\r\n\r\n')
-    except KeyboardInterrupt:  # TODO: somehow not catching these exceptions...
-        print(colored('Interrupted by user.', 'yellow'))
-        videocap.release()
-        cv2.destroyAllWindows()
-    except Exception as e:
-        print(colored('EXCEPTION:', 'yellow'))
-        videocap.release()
-        cv2.destroyAllWindows()
-        raise e
+    while True:
+        jpeg = get_jpeg_frame()
+        yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg + b'\r\n\r\n'
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -117,14 +91,15 @@ def query_image():
 
 @app.route('/get_query_image')
 def get_query_image():
-    frame = get_numpy_frame()  # [480, 640, 3] by default
+    frame = get_numpy_frame()  # [480, 640, 3] uint8 by default
+    videocap.release()  # TODO: or not if want to retake?
 
     # TODO: do the ML stuff
 
     # To jpeg for display:
     ret, jpeg = cv2.imencode('.jpg', frame)
     jpeg = jpeg.tobytes()
-    response = (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg + b'\r\n\r\n')
+    response = b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg + b'\r\n\r\n'
 
     return Response(response, mimetype='multipart/x-mixed-replace; boundary=frame')
 
@@ -144,6 +119,5 @@ if __name__ == '__main__':
     #     type=str,
     # )
     # args = parser.parse_args()
-
 
     app.run(debug=False)
