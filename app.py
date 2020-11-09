@@ -10,7 +10,7 @@ from termcolor import colored
 from PIL import Image
 
 from core.dataio import Database
-from core.models import load_models
+from core.models import SuperModel
 from core.augs import load_augs
 from core.config import RESIZE_TO
 
@@ -42,12 +42,13 @@ thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
 
 # Load models:
-print('Loading models.')
-models = load_models()  # about 13s
-segnet = models['segnet']
-segnet.model.cuda()  # TODO: cuda
-repnet = models['repnet'].cuda()
-pca = models['pca']
+# print('Loading models.')
+# models = load_models()  # about 13s
+# segnet = models['segnet']
+# segnet.model.cuda()  # TODO: cuda
+# repnet = models['repnet'].cuda()
+# pca = models['pca']
+supermodel = SuperModel()
 
 # Def augs:
 augs = load_augs(resize_to=RESIZE_TO)
@@ -123,7 +124,8 @@ def get_query_image():
     img = augs['augs_base'](img)  # [256, .., 3] or [.., 256, 3]; torch.tensor!
     videocap.release()  # TODO: or not if want to retake?
 
-    # TODO: do the ML stuff
+    # supermodel out:
+    code_global, pred_img, local_results = supermodel(img)
 
     # To jpeg for display:
     img = np.array(img)  # back to numpy from tensor; uint8 but cropped
