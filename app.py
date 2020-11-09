@@ -19,6 +19,9 @@ from core.config import RESIZE_TO
 """
 'I was facing this problem while running the flask server in debug mode because it called cv2.VideoCapture(0) twice.'
 
+TODO: write master model class (torch module) to be used both in indexing and retrieval stage; eventually in ONNX after
+pca replaced with bottleneck layer.
+Takes in `img`, output is everything required for database.append
 """
 
 
