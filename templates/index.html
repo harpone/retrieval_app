@@ -1,12 +1,15 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Demo</title>
+  </head>
+  <body>
+  Welcome to my demo.
+  <br>
+  <form method="post" action="/">
+      <input type="submit" name="start" value="Open camera">
+  </form>
+  </body>
+<br>
 
-{% block content %}
-{#    <h1>{% block title %} Welcome to FlaskBlog {% endblock %}</h1>#}
-    {% for entity in entities %}
-        <a href="{{ url_for('post', idx=entity['idx']) }}">
-            <h4>{{ entity['prediction_image'] }}</h4>
-        </a>
-        <span class="badge badge-primary">{{ entity['url'] }}</span>
-        <hr>
-    {% endfor %}
-{% endblock %}
+
