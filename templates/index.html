@@ -2,11 +2,11 @@
 
 {% block content %}
 {#    <h1>{% block title %} Welcome to FlaskBlog {% endblock %}</h1>#}
-    {% for post in posts %}
-        <a href="#">
-            <h2>{{ post['title'] }}</h2>
+    {% for entity in entities %}
+        <a href="{{ url_for('post', idx=entity['idx']) }}">
+            <h4>{{ entity['prediction_image'] }}</h4>
         </a>
-        <span class="badge badge-primary">{{ post['created'] }}</span>
+        <span class="badge badge-primary">{{ entity['url'] }}</span>
         <hr>
     {% endfor %}
 {% endblock %}
