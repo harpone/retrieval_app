@@ -4,10 +4,10 @@
     <title>Video feed</title>
   </head>
   <body>
-  <img src="{{ url_for('video_feed') }}" />
   <form method="post" action="/">
       <input type="submit" name="stop" value="Take photo">
   </form>
+  <img src="{{ url_for('video_feed') }}" />
   </body>
 <br>
 </html>

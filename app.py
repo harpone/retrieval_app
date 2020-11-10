@@ -17,7 +17,7 @@ from core.augs import load_augs
 from core.config import RESIZE_TO
 from core.utils import fuse_results
 
-global DEBUGGING_WITHOUT_MODEL
+DEBUGGING_WITHOUT_MODEL = True
 
 """
 
@@ -50,7 +50,7 @@ augs = load_augs(resize_to=RESIZE_TO)
 
 
 def get_numpy_frame():
-    ret, frame = videocap.read()  # frame [480, 640, 3] by default
+    ret, frame = videocap.read()  # frame [480, 640, 3] by default  # TODO: sometimes returns frame = None!
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     return frame
 
@@ -127,7 +127,11 @@ def query_image():
         # bake in the segmentations to the PIL image:
         buf = fuse_results(img_orig, img_aug, results)
 
-        return render_template('query_image.html', img=buf)
+        # entity ids for HTML:
+        ids = ['Image']
+        ids += [str(i+1) for i in range(len(results.keys()) - 1)]
+
+        return render_template('query_image.html', img=buf, ids=ids)
 
 
 @app.route('/<int:idx>')
@@ -145,7 +149,5 @@ if __name__ == '__main__':
     #     type=str,
     # )
     # args = parser.parse_args()
-
-    DEBUGGING_WITHOUT_MODEL = True
 
     app.run(debug=False)
