@@ -131,18 +131,20 @@ def query_image():
     if 'restart' in request.form:
         print('Starting video feed...')
         return redirect(url_for('show_feed'))
-    elif 'Image' in request.form:  # query for global image
-        code_image, _, _, pred_image, _, _ = RESULTS[0]
+    elif any(['entity' in key for key in request.form.keys()]):  # query entities or entire image
+        item_id = eval(list(request.form.keys())[0].split('_')[-1])
+        code, h_center, w_center, pred, isthing, seg_mask = RESULTS[item_id]
 
         # Search for nns:
-        query_results = ngtpy_index.search(code_image, N_RETRIEVED_RESULTS)
+        query_results = ngtpy_index.search(code, N_RETRIEVED_RESULTS)
         indices, dists = list(zip(*query_results))
 
-        # TODO: rest
+        # Get corresponding entities from database:
 
-        return redirect(url_for('query_image'))
-    elif len(list(request.form.keys())) == 1:  # query for other ids  TODO hackety hacky shit!!
-        item_id = int(list(request.form.keys())[0])
+
+
+
+
         print(item_id)
         return redirect(url_for('query_image'))
     else:  # will just redisplay original snapshot
@@ -161,9 +163,9 @@ def query_image():
         buf = fuse_results(img_orig, img_aug, RESULTS)
 
         # entity ids for HTML:
-        ids = ['Image']
-        #ids += [str(i+1) for i in range(len(results.keys()) - 1)]
-        ids += [i + 1 for i in range(len(RESULTS.keys()) - 1)]
+        labels = ['Image']
+        labels += [str(i + 1) for i in range(len(RESULTS.keys()) - 1)]
+        ids = {label: 'entity_' + str(num) for label, num in zip(labels, np.arange(len(labels)))}
 
         return render_template('query_image.html', img=buf, ids=ids)
 

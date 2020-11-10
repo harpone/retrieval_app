@@ -2,15 +2,23 @@
 <html lang="en">
     <head>
         <title>Title</title>
+    <style>
+    .img-box{
+        border: 4px solid #333;
+        display: block;
+    }
+    </style>
     </head>
     <body>
     <form class="form-inline" method="post" action="/query_image">
         <input type="submit" name="restart" value="Restart">
-        {% for id in ids %}
-            <input type="submit" name={{ id }} value={{ id }}>
+        {% for label, num in ids.items() %}
+            <input type="submit" name={{ num }} value={{ label }}>
         {% endfor %}
       </form>
-    <img src="data:image/PNG;base64,{{img}}">
+    <div class="img-box">
+        <img src="data:image/PNG;base64,{{img}}"/>
+    </div>
     </body>
 
 </html>
