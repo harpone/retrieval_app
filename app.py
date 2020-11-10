@@ -112,7 +112,14 @@ def query_image():
     if 'restart' in request.form:
         print('Starting video feed...')
         return redirect(url_for('show_feed'))
-    else:
+    elif 'Image' in request.form:  # query for global image
+
+        return redirect(url_for('query_image'))
+    elif len(list(request.form.keys())) == 1:  # TODO hackety hacky shit!!
+        item_id = int(list(request.form.keys())[0])
+        print(item_id)
+        return redirect(url_for('query_image'))
+    else:  # will just redisplay original snapshot
         img = get_numpy_frame()  # [480, 640, 3] uint8 by default
         img_orig = Image.fromarray(img)
         img_aug = augs['augs_base'](img_orig)  # [256, .., 3] or [.., 256, 3]; stil PIL
@@ -129,7 +136,8 @@ def query_image():
 
         # entity ids for HTML:
         ids = ['Image']
-        ids += [str(i+1) for i in range(len(results.keys()) - 1)]
+        #ids += [str(i+1) for i in range(len(results.keys()) - 1)]
+        ids += [i + 1 for i in range(len(results.keys()) - 1)]
 
         return render_template('query_image.html', img=buf, ids=ids)
 
