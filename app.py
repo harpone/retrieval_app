@@ -15,6 +15,7 @@ from core.dataio import Database
 from core.models import SuperModel
 from core.augs import load_augs
 from core.config import RESIZE_TO
+from core.utils import fuse_results
 
 
 
@@ -40,8 +41,8 @@ thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
 
 # Load Supermodel:
-#supermodel = SuperModel()
-supermodel = lambda x: (x, x, x)  # TODO: for debugging
+supermodel = SuperModel()
+#supermodel = lambda x: (x, x, x)  # TODO: for debugging
 
 # Def augs:
 augs = load_augs(resize_to=RESIZE_TO)
@@ -108,23 +109,17 @@ def video_feed():
 @app.route('/query_image')
 def query_image():
     img = get_numpy_frame()  # [480, 640, 3] uint8 by default
-    img = Image.fromarray(img)
-    img = augs['augs_base'](img)  # [256, .., 3] or [.., 256, 3]; stil PIL
+    img_orig = Image.fromarray(img)
+    img_aug = augs['augs_base'](img_orig)  # [256, .., 3] or [.., 256, 3]; stil PIL
     videocap.release()  # TODO: or not if want to retake?
 
     # supermodel out:
-    results = supermodel(img)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
+    results = supermodel(img_aug)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
 
     # bake in the segmentations to the PIL image:
+    buf = fuse_results(img_orig, img_aug, results)
 
-
-    # img to jpeg for display:
-    img_io = io.BytesIO()
-    img.convert('RGB').save(img_io, 'JPEG')
-    img_io.seek(0)
-    img = base64.b64encode(img_io.getvalue()).decode('ascii')
-
-    return render_template('query_image.html', img=img)
+    return render_template('query_image.html', img=buf)
 
 
 @app.route('/<int:idx>')

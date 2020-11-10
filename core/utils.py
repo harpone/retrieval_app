@@ -2,6 +2,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from PIL import Image
 import numpy as np
+from scipy.ndimage import zoom
 from detectron2 import model_zoo
 from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
@@ -11,21 +12,29 @@ import matplotlib.pyplot as plt
 from skimage.morphology import medial_axis, skeletonize
 from skimage.segmentation import find_boundaries
 import io
+import base64
+
 
 catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
 thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
 
-def plt_to_bytesio(img, results, figsize=10):
+
+def fuse_results(img_orig, img_aug, results, figsize=10, encode_for_html=True):
     """
 
-    :param img: PIL image *after* augmentation
+    :param img_orig: PIL image *before* augmentation
+    :param img_aug: PIL image *after* augmentation
     :param results: results dict; output from SuperModel
     :return:
     """
-    img_np = np.array(img)
+    shape_orig = np.array(list(img_orig.size))  # w, h
+    shape_current = np.array(list(img_aug.size))  # w, h
+    scale = shape_orig.min() / shape_current.min()
+    pad_amount = shape_orig.max() - int(scale * shape_current.max())
 
     fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+    img_np = np.array(img_orig)
     ax.imshow(img_np)
     ax.set_xticks([])
     ax.set_yticks([])
@@ -34,10 +43,17 @@ def plt_to_bytesio(img, results, figsize=10):
         if key == 0:
             continue  # display nothing for global code
         _, h_center, w_center, pred_item, is_thing, seg_mask = vals
+
+        # Resize seg_mask to `img` shape:
+        seg_mask = zoom(seg_mask, [scale, scale], order=0)
+        # Pad longer side:
+        landscape = seg_mask.shape[1] > seg_mask.shape[0]
+        seg_mask = np.pad(seg_mask, ((0, pad_amount if not landscape else 0), (0, pad_amount if landscape else 0)))
+
         seg_mask = find_boundaries(seg_mask, mode='thick').astype(np.float32)
         seg_mask[seg_mask < 1] = np.nan  # NaN is transparent
-        w_center *= img.width
-        h_center *= img.height
+        w_center *= img_orig.width
+        h_center *= img_orig.height
         # pred_item = thing_classes[pred_item] if is_thing else stuff_classes[pred_item]
         # ax.scatter(w_center, h_center, s=500, c='r', marker='o', alpha=0.3)
         ax.imshow(seg_mask, alpha=.99, cmap='cool')  # if is_thing else None
@@ -49,6 +65,8 @@ def plt_to_bytesio(img, results, figsize=10):
     buf = io.BytesIO()
     fig.savefig(buf, format='jpg')
     buf.seek(0)
+    if encode_for_html:
+        buf = base64.b64encode(buf.getvalue()).decode('ascii')
 
     return buf
 
