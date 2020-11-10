@@ -21,6 +21,7 @@ from core.utils import fuse_results
 
 RESULTS = None
 DEBUGGING_WITHOUT_MODEL = True
+N_RETRIEVED_RESULTS = 5
 
 """
 
@@ -41,13 +42,15 @@ codes = database.codes
 # Build index if one doesn't exist:
 index_path = './model_data/ngtpy_index'
 if not os.path.exists(index_path):
-    print('Creating index for the first time. This can take a while (around 1s per 10k objects)...')
+    print(colored('Creating NGTPY index for the first time. '
+                  'This can take a while (around 1s per 10k objects)...', 'green'))
     ngtpy.create(path=index_path, dimension=128, object_type='Float')
-    index = ngtpy.Index(index_path)
-    index.batch_insert(np.array(codes))  # TODO: limits of batch_insert?  11s for 100k objects @home
-    index.save()
+    ngtpy_index = ngtpy.Index(index_path)
+    ngtpy_index.batch_insert(np.array(codes))  # TODO: limits of batch_insert?  11s for 100k objects @home
+    ngtpy_index.save()
 else:
-    index = ngtpy.Index(index_path)
+    print(colored('Loading an existing NGTPY index...', 'green'))
+    ngtpy_index = ngtpy.Index(index_path)
 
 # for sanity checks:
 catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
@@ -131,7 +134,11 @@ def query_image():
     elif 'Image' in request.form:  # query for global image
         code_image, _, _, pred_image, _, _ = RESULTS[0]
 
+        # Search for nns:
+        query_results = ngtpy_index.search(code_image, N_RETRIEVED_RESULTS)
+        indices, dists = list(zip(*query_results))
 
+        # TODO: rest
 
         return redirect(url_for('query_image'))
     elif len(list(request.form.keys())) == 1:  # query for other ids  TODO hackety hacky shit!!
