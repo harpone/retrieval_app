@@ -160,14 +160,15 @@ def query_image():
             RESULTS = supermodel(img_aug)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
 
         # bake in the segmentations to the PIL image:
-        buf = fuse_results(img_orig, img_aug, RESULTS)
+        query_img_path = fuse_results(img_orig, img_aug, RESULTS)
+        #query_img_path = os.path.abspath(query_img_path)
 
         # entity ids for HTML:
         labels = ['Image']
         labels += [str(i + 1) for i in range(len(RESULTS.keys()) - 1)]
         ids = {label: 'entity_' + str(num) for label, num in zip(labels, np.arange(len(labels)))}
 
-        return render_template('query_image.html', img=buf, ids=ids)
+        return render_template('query_image.html', query_img_path=query_img_path, ids=ids)
 
 
 @app.route('/<int:idx>')

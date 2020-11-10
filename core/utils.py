@@ -28,6 +28,7 @@ def fuse_results(img_orig, img_aug, results, figsize=10, encode_for_html=True):
     :param results: results dict; output from SuperModel
     :return:
     """
+    # TODO: adds fuckloads of stupid whitespace!
     shape_orig = np.array(list(img_orig.size))  # w, h
     shape_current = np.array(list(img_aug.size))  # w, h
     scale = shape_orig.min() / shape_current.min()
@@ -62,13 +63,15 @@ def fuse_results(img_orig, img_aug, results, figsize=10, encode_for_html=True):
         # ax.annotate(pred_item, (w_center - 2, h_center + 2), bbox = text_dict)
 
     # make bytesIO:
-    buf = io.BytesIO()
-    fig.savefig(buf, format='jpg')
-    buf.seek(0)
-    if encode_for_html:
-        buf = base64.b64encode(buf.getvalue()).decode('ascii')
+    #buf = io.BytesIO()
+    query_img_path = './static/query_img.jpg'
+    fig.savefig(query_img_path, format='jpg')
+    query_img_path = 'static/query_img.jpg'  # need this for teh HTML
+    # buf.seek(0)
+    # if encode_for_html:
+    #     buf = base64.b64encode(buf.getvalue()).decode('ascii')
 
-    return buf
+    return query_img_path
 
 
 def visualize_segmentations(img, seg, seg_info):
