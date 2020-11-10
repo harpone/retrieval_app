@@ -59,7 +59,7 @@ class SuperModel(nn.Module):
         outputs_seg = self.segnet(self.augs['augs_seg'](img))
         seg, segments_info = outputs_seg["panoptic_seg"]
         # visualize_segmentations(augs['augs_seg'](img), seg, segments_info)  # TODO: comment when done debugging
-        seg_masks = np.eye(seg.max() + 1)[seg.cpu().numpy()].transpose(2, 0, 1).astype(bool)  # [num_segs, H_, W_]
+        seg_masks = np.eye(seg.max() + 1)[seg.cpu().numpy()].transpose(2, 0, 1).astype(bool)[1:]  # [num_segs, H_, W_] note dropped background
 
         # Representation:
         logits, codes = self.repnet(self.augs['augs_rep'](img)[None].cuda())  # e.g. inp: [256, 416] out: [8192, 8, 13]
@@ -72,8 +72,9 @@ class SuperModel(nn.Module):
 
         # Resize segmentation to repnet shape:
         seg_masks_small = zoom(seg_masks, [1, 1 / 32, 1 / 32], order=0)  # e.g. shape [num_segs, 8, 13]
-        local_results = list()
-        for seg_mask_small, seg_mask, seg_info in zip(seg_masks_small[1:], seg_masks[1:], segments_info):
+        result_dict = dict()
+        result_dict[0] = [code_global, 0, 0, pred_img, None]
+        for i, (seg_mask_small, seg_mask, seg_info) in enumerate(zip(seg_masks_small, seg_masks, segments_info)):
 
             #### Get local code and meta:
             seg_mask_area = seg_mask_small.sum()
@@ -84,7 +85,7 @@ class SuperModel(nn.Module):
             # Visual center from large seg_mask:
             h_center, w_center = compute_visual_center(seg_mask)
 
-            local_results.append([code_local, h_center, w_center, pred_item])
+            local_results.append([code_local, h_center, w_center, pred_item, seg_mask])
 
         return code_global, pred_img, local_results
 

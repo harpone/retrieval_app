@@ -19,11 +19,7 @@ from core.config import RESIZE_TO
 
 
 """
-'I was facing this problem while running the flask server in debug mode because it called cv2.VideoCapture(0) twice.'
 
-TODO: write master model class (torch module) to be used both in indexing and retrieval stage; eventually in ONNX after
-pca replaced with bottleneck layer.
-Takes in `img`, output is everything required for database.append
 """
 
 
@@ -117,9 +113,14 @@ def query_image():
     videocap.release()  # TODO: or not if want to retake?
 
     # supermodel out:
-    code_global, pred_img, local_results = supermodel(img)
+    code_global, pred_global, local_results = supermodel(img)
+    # local_results = [code_local, h_center, w_center, pred_item, seg_mask] per entity; seg_mask not stored in database
 
-    # To jpeg for display:
+
+
+    # TODO: bake in the segmentations to the PIL image
+
+    # img to jpeg for display:
     img_io = io.BytesIO()
     img.convert('RGB').save(img_io, 'JPEG')
     img_io.seek(0)
