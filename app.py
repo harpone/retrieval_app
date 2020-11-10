@@ -106,20 +106,24 @@ def video_feed():
     return Response(generate_feed(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
-@app.route('/query_image')
+@app.route('/query_image', methods=['GET', 'POST'])
 def query_image():
-    img = get_numpy_frame()  # [480, 640, 3] uint8 by default
-    img_orig = Image.fromarray(img)
-    img_aug = augs['augs_base'](img_orig)  # [256, .., 3] or [.., 256, 3]; stil PIL
-    videocap.release()  # TODO: or not if want to retake?
+    if 'restart' in request.form:
+        print('Starting video feed...')
+        return redirect(url_for('show_feed'))
+    else:
+        img = get_numpy_frame()  # [480, 640, 3] uint8 by default
+        img_orig = Image.fromarray(img)
+        img_aug = augs['augs_base'](img_orig)  # [256, .., 3] or [.., 256, 3]; stil PIL
+        #videocap.release()  # TODO: or not if want to retake?
 
-    # supermodel out:
-    results = supermodel(img_aug)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
+        # supermodel out:
+        results = supermodel(img_aug)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
 
-    # bake in the segmentations to the PIL image:
-    buf = fuse_results(img_orig, img_aug, results)
+        # bake in the segmentations to the PIL image:
+        buf = fuse_results(img_orig, img_aug, results)
 
-    return render_template('query_image.html', img=buf)
+        return render_template('query_image.html', img=buf)
 
 
 @app.route('/<int:idx>')
