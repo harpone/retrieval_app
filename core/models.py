@@ -77,7 +77,7 @@ class SuperModel(nn.Module):
         # Resize segmentation to repnet shape:
         seg_masks_small = zoom(seg_masks, [1, 1 / 32, 1 / 32], order=0)  # e.g. shape [num_segs, 8, 13]
         result_dict = dict()
-        result_dict[0] = [code_global, 0, 0, pred_img, None]
+        result_dict[0] = [code_global, 0, 0, pred_img, False, None]
         for i, (seg_mask_small, seg_mask, seg_info) in enumerate(zip(seg_masks_small, seg_masks, segments_info)):
 
             #### Get local code and meta:

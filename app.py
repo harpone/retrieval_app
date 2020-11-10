@@ -1,11 +1,13 @@
 from argparse import ArgumentParser
 import numpy as np
+import ngtpy
 from flask import Flask, render_template, request, url_for, flash, redirect, Response
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from werkzeug.exceptions import abort
 import torch
 import base64
 import io
+import os
 from detectron2.data import MetadataCatalog, DatasetCatalog
 import cv2
 from termcolor import colored
@@ -17,12 +19,13 @@ from core.augs import load_augs
 from core.config import RESIZE_TO
 from core.utils import fuse_results
 
+RESULTS = None
 DEBUGGING_WITHOUT_MODEL = True
 
 """
 
 """
-
+# TODO: maybe all globals in uppercase?
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
 
@@ -31,8 +34,20 @@ app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
 videocap = cv2.VideoCapture(0)
 print(colored('Video capture device initialized', 'green'))
 
-# Set up database:
+# Set up database:  # TODO: protect codes and index! Needs refactoring!! Actually maybe
 database = Database('/home/heka/database/test_50k.h5', mode='r')
+codes = database.codes
+
+# Build index if one doesn't exist:
+index_path = './model_data/ngtpy_index'
+if not os.path.exists(index_path):
+    print('Creating index for the first time. This can take a while (around 1s per 10k objects)...')
+    ngtpy.create(path=index_path, dimension=128, object_type='Float')
+    index = ngtpy.Index(index_path)
+    index.batch_insert(np.array(codes))  # TODO: limits of batch_insert?  11s for 100k objects @home
+    index.save()
+else:
+    index = ngtpy.Index(index_path)
 
 # for sanity checks:
 catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
@@ -109,13 +124,17 @@ def video_feed():
 
 @app.route('/query_image', methods=['GET', 'POST'])
 def query_image():
+    global RESULTS
     if 'restart' in request.form:
         print('Starting video feed...')
         return redirect(url_for('show_feed'))
     elif 'Image' in request.form:  # query for global image
+        code_image, _, _, pred_image, _, _ = RESULTS[0]
+
+
 
         return redirect(url_for('query_image'))
-    elif len(list(request.form.keys())) == 1:  # TODO hackety hacky shit!!
+    elif len(list(request.form.keys())) == 1:  # query for other ids  TODO hackety hacky shit!!
         item_id = int(list(request.form.keys())[0])
         print(item_id)
         return redirect(url_for('query_image'))
@@ -127,17 +146,17 @@ def query_image():
         # supermodel out:
         if DEBUGGING_WITHOUT_MODEL:  # debugging
             results_load = np.load('supermodel_out.npz', allow_pickle=True)
-            results = {int(key): results_load[key] for key in results_load.files}
+            RESULTS = {int(key): results_load[key] for key in results_load.files}
         else:
-            results = supermodel(img_aug)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
+            RESULTS = supermodel(img_aug)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
 
         # bake in the segmentations to the PIL image:
-        buf = fuse_results(img_orig, img_aug, results)
+        buf = fuse_results(img_orig, img_aug, RESULTS)
 
         # entity ids for HTML:
         ids = ['Image']
         #ids += [str(i+1) for i in range(len(results.keys()) - 1)]
-        ids += [i + 1 for i in range(len(results.keys()) - 1)]
+        ids += [i + 1 for i in range(len(RESULTS.keys()) - 1)]
 
         return render_template('query_image.html', img=buf, ids=ids)
 
