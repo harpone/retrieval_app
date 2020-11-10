@@ -53,13 +53,17 @@ class SuperModel(nn.Module):
         """
 
         :param img: PIL image, transformed
-        :return:
+        :return: dict where index=0 is the global entity and index>0 are the local ones
         """
         # Segmentation:
         outputs_seg = self.segnet(self.augs['augs_seg'](img))
         seg, segments_info = outputs_seg["panoptic_seg"]
         # visualize_segmentations(augs['augs_seg'](img), seg, segments_info)  # TODO: comment when done debugging
-        seg_masks = np.eye(seg.max() + 1)[seg.cpu().numpy()].transpose(2, 0, 1).astype(bool)[1:]  # [num_segs, H_, W_] note dropped background
+        seg_masks = np.eye(seg.max() + 1)[seg.cpu().numpy()].transpose(2, 0, 1).astype(bool)  # [num_segs, H_, W_]
+
+        # Drop background:
+        segments_info = segments_info[1:]
+        seg_masks = seg_masks[1:]
 
         # Representation:
         logits, codes = self.repnet(self.augs['augs_rep'](img)[None].cuda())  # e.g. inp: [256, 416] out: [8192, 8, 13]
@@ -85,9 +89,11 @@ class SuperModel(nn.Module):
             # Visual center from large seg_mask:
             h_center, w_center = compute_visual_center(seg_mask)
 
-            local_results.append([code_local, h_center, w_center, pred_item, seg_mask])
+            isthing = seg_info['isthing']
 
-        return code_global, pred_img, local_results
+            result_dict[i+1] = [code_local, h_center, w_center, pred_item, isthing, seg_mask]
+
+        return result_dict
 
 
 

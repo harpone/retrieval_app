@@ -9,6 +9,48 @@ from detectron2.utils.visualizer import Visualizer
 from detectron2.data import MetadataCatalog, DatasetCatalog
 import matplotlib.pyplot as plt
 from skimage.morphology import medial_axis, skeletonize
+from skimage.segmentation import find_boundaries
+import io
+
+catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
+thing_classes = catalog.thing_classes
+stuff_classes = catalog.stuff_classes
+
+def plt_to_bytesio(img, results, figsize=10):
+    """
+
+    :param img: PIL image *after* augmentation
+    :param results: results dict; output from SuperModel
+    :return:
+    """
+    img_np = np.array(img)
+
+    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+    ax.imshow(img_np)
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+    for key, vals in results.items():
+        if key == 0:
+            continue  # display nothing for global code
+        _, h_center, w_center, pred_item, is_thing, seg_mask = vals
+        seg_mask = find_boundaries(seg_mask, mode='thick').astype(np.float32)
+        seg_mask[seg_mask < 1] = np.nan  # NaN is transparent
+        w_center *= img.width
+        h_center *= img.height
+        # pred_item = thing_classes[pred_item] if is_thing else stuff_classes[pred_item]
+        # ax.scatter(w_center, h_center, s=500, c='r', marker='o', alpha=0.3)
+        ax.imshow(seg_mask, alpha=.99, cmap='cool')  # if is_thing else None
+        text_dict = dict(boxstyle="round", fc="white", ec="green")
+        ax.annotate(key, (w_center - 2, h_center + 2), bbox=text_dict)
+        # ax.annotate(pred_item, (w_center - 2, h_center + 2), bbox = text_dict)
+
+    # make bytesIO:
+    buf = io.BytesIO()
+    fig.savefig(buf, format='jpg')
+    buf.seek(0)
+
+    return buf
 
 
 def visualize_segmentations(img, seg, seg_info):

@@ -113,12 +113,10 @@ def query_image():
     videocap.release()  # TODO: or not if want to retake?
 
     # supermodel out:
-    code_global, pred_global, local_results = supermodel(img)
-    # local_results = [code_local, h_center, w_center, pred_item, seg_mask] per entity; seg_mask not stored in database
+    results = supermodel(img)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
 
+    # bake in the segmentations to the PIL image:
 
-
-    # TODO: bake in the segmentations to the PIL image
 
     # img to jpeg for display:
     img_io = io.BytesIO()
