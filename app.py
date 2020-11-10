@@ -17,12 +17,11 @@ from core.augs import load_augs
 from core.config import RESIZE_TO
 from core.utils import fuse_results
 
-
-
-"""
+global DEBUGGING_WITHOUT_MODEL
 
 """
 
+"""
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
@@ -41,8 +40,10 @@ thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
 
 # Load Supermodel:
-supermodel = SuperModel()
-#supermodel = lambda x: (x, x, x)  # TODO: for debugging
+if DEBUGGING_WITHOUT_MODEL:
+    supermodel = None
+else:
+    supermodel = SuperModel()
 
 # Def augs:
 augs = load_augs(resize_to=RESIZE_TO)
@@ -115,10 +116,13 @@ def query_image():
         img = get_numpy_frame()  # [480, 640, 3] uint8 by default
         img_orig = Image.fromarray(img)
         img_aug = augs['augs_base'](img_orig)  # [256, .., 3] or [.., 256, 3]; stil PIL
-        #videocap.release()  # TODO: or not if want to retake?
 
         # supermodel out:
-        results = supermodel(img_aug)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
+        if DEBUGGING_WITHOUT_MODEL:  # debugging
+            results_load = np.load('supermodel_out.npz', allow_pickle=True)
+            results = {int(key): results_load[key] for key in results_load.files}
+        else:
+            results = supermodel(img_aug)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
 
         # bake in the segmentations to the PIL image:
         buf = fuse_results(img_orig, img_aug, results)
@@ -141,5 +145,7 @@ if __name__ == '__main__':
     #     type=str,
     # )
     # args = parser.parse_args()
+
+    DEBUGGING_WITHOUT_MODEL = True
 
     app.run(debug=False)

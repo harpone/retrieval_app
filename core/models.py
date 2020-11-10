@@ -67,7 +67,7 @@ class SuperModel(nn.Module):
 
         # Representation:
         logits, codes = self.repnet(self.augs['augs_rep'](img)[None].cuda())  # e.g. inp: [256, 416] out: [8192, 8, 13]
-        pred_img = logits[0].argmax().cpu()  # TODO: sanity check several of these
+        pred_img = int(logits[0].argmax().cpu())  # TODO: sanity check several of these
         codes = codes[0].detach().cpu().numpy()  # e.g. shape [8192, 8, 13]
 
         #### Get global code and meta:
