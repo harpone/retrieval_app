@@ -7,6 +7,7 @@ from werkzeug.exceptions import abort
 import torch
 import base64
 import io
+import shutil
 import os
 from detectron2.data import MetadataCatalog, DatasetCatalog
 import cv2
@@ -30,6 +31,11 @@ N_RETRIEVED_RESULTS = 5
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
 
+# Delete cache folder:
+try:
+    shutil.rmtree('./static/cache')
+except:
+    pass
 
 # Set up video capture:
 videocap = cv2.VideoCapture(0)
