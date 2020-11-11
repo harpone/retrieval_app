@@ -34,6 +34,7 @@ app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
 # Delete cache folder:
 try:
     shutil.rmtree('./static/cache')
+    os.makedirs('./static/cache')
 except:
     pass
 

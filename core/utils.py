@@ -68,7 +68,7 @@ def fuse_results(img_orig, img_aug, results, figsize=10, encode_for_html=True):
     # make bytesIO:
     #buf = io.BytesIO()
     rnd_string = uuid.uuid1().hex[-16:]  # need unique filename to avoid browser using cache
-    query_img_path = './static/cache/query_img.jpg' + '?' + rnd_string
+    query_img_path = f'./static/cache/query_img_{rnd_string}.jpg'
     os.makedirs('./static/cache/', exist_ok=True)
     fig.savefig(query_img_path, format='jpg', bbox_inches='tight', pad_inches=0)
     query_img_path = query_img_path[2:]  # need this for teh HTML
