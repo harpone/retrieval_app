@@ -23,7 +23,7 @@ from core.config import RESIZE_TO, N_RETRIEVED_RESULTS
 from core.utils import get_query_plot, get_retrieval_plot
 
 RESULTS = None
-DEBUGGING_WITHOUT_MODEL = True
+DEBUGGING_WITHOUT_MODEL = False
 
 """
 

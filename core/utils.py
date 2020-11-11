@@ -98,7 +98,7 @@ def get_retrieval_plot(indices, entities):
     images_ret = images_from_urls(urls)
 
     # 2) form 2 col, 3 row matplotlib plot with h_center, w_center scatter
-    fig, ax = plt.subplots(N_RETRIEVED_RESULTS // 2, 2)
+    fig, ax = plt.subplots(N_RETRIEVED_RESULTS // 2, 2, figsize=(13, 13))
     for n in range(len(images_ret)):
         img_ret = images_ret[n]
         img_ret = np.array(img_ret)
@@ -118,6 +118,7 @@ def get_retrieval_plot(indices, entities):
     rnd_string = uuid.uuid1().hex[-16:]  # need unique filename to avoid browser using cache
     retrieval_img_path = f'./static/cache/retrieval_img_{rnd_string}.jpg'
     os.makedirs('./static/cache/', exist_ok=True)
+    plt.tight_layout()
     fig.savefig(retrieval_img_path, format='jpg', bbox_inches='tight', pad_inches=0)
     retrieval_img_path = retrieval_img_path[2:]
 
