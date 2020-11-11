@@ -15,6 +15,7 @@ from skimage.segmentation import find_boundaries
 import io
 import os
 import base64
+import shutil
 
 from core.dataio import images_from_urls
 from core.config import N_RETRIEVED_RESULTS
@@ -25,6 +26,14 @@ thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
 
 
+def delete_plot_cache():
+    try:
+        shutil.rmtree('./static/cache')
+        os.makedirs('./static/cache')
+    except:
+        pass
+
+
 def get_query_plot(img_orig, img_aug, results, debug_mode=False):
     """
 
@@ -33,7 +42,6 @@ def get_query_plot(img_orig, img_aug, results, debug_mode=False):
     :param results: results dict; output from SuperModel
     :return:
     """
-    # TODO: adds fuckloads of stupid whitespace!
     shape_orig = np.array(list(img_orig.size))  # w, h
     shape_current = np.array(list(img_aug.size))  # w, h
     scale = shape_orig.min() / shape_current.min()
@@ -48,16 +56,18 @@ def get_query_plot(img_orig, img_aug, results, debug_mode=False):
     for key, vals in results.items():
         if key == 0:
             continue  # display nothing for global code
-        _, h_center, w_center, pred_item, is_thing, seg_mask = vals
+        #_, h_center, w_center, pred_item, is_thing, seg_mask = vals
 
         # Resize seg_mask to `img` shape:
-        seg_mask = zoom(seg_mask, [scale, scale], order=0)
+        seg_mask = zoom(vals['seg_mask'], [scale, scale], order=0)
         # Pad longer side:
         landscape = seg_mask.shape[1] > seg_mask.shape[0]
         seg_mask = np.pad(seg_mask, ((0, pad_amount if not landscape else 0), (0, pad_amount if landscape else 0)))
 
         seg_mask = find_boundaries(seg_mask, mode='thick').astype(np.float32)
         seg_mask[seg_mask < 1] = np.nan  # NaN is transparent
+        w_center = vals['w']
+        h_center = vals['h']
         w_center *= img_orig.width
         h_center *= img_orig.height
         # pred_item = thing_classes[pred_item] if is_thing else stuff_classes[pred_item]
@@ -65,15 +75,15 @@ def get_query_plot(img_orig, img_aug, results, debug_mode=False):
         ax.imshow(seg_mask, alpha=.99, cmap='cool')  # if is_thing else None
         text_dict = dict(boxstyle="round", fc="white", ec="green")
         if debug_mode:
-            pred_item = thing_classes[pred_item] if is_thing else stuff_classes[pred_item]
-            key = str(key) + ': ' + pred_item
+            #pred_item = thing_classes[pred_item] if is_thing else stuff_classes[pred_item]
+            key = str(key) + ': ' + vals['pred']
         ax.annotate(key, (w_center - 2, h_center + 2), bbox=text_dict)
         ax.set_axis_off()  # get rid of padding in figure
         # ax.annotate(pred_item, (w_center - 2, h_center + 2), bbox = text_dict)
 
     # make bytesIO:
     #buf = io.BytesIO()
-    rnd_string = uuid.uuid1().hex[-16:]  # need unique filename to avoid browser using cache
+    rnd_string = uuid.uuid1().hex[:16]  # need unique filename to avoid browser using cache
     query_img_path = f'./static/cache/query_img_{rnd_string}.jpg'
     os.makedirs('./static/cache/', exist_ok=True)
     fig.savefig(query_img_path, format='jpg', bbox_inches='tight', pad_inches=0)
@@ -129,7 +139,7 @@ def get_retrieval_plot(indices, entities, debug_mode=False):
 
         ax[i, j].set_axis_off()
 
-    rnd_string = uuid.uuid1().hex[-16:]  # need unique filename to avoid browser using cache
+    rnd_string = uuid.uuid1().hex[:16]  # need unique filename to avoid browser using cache
     retrieval_img_path = f'./static/cache/retrieval_img_{rnd_string}.jpg'
     os.makedirs('./static/cache/', exist_ok=True)
     plt.tight_layout()

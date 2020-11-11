@@ -6,13 +6,18 @@ import torch.nn as nn
 from scipy.ndimage import zoom
 from joblib import load
 import numpy as np
+import pandas as pd
+from detectron2.data import MetadataCatalog, DatasetCatalog
 
 from core.resnet_wider import resnet50x4
 from core.config import RESIZE_TO
 from core.augs import load_augs
 from core.utils import visualize_segmentations, compute_visual_center
 
-
+catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
+thing_classes = catalog.thing_classes
+stuff_classes = catalog.stuff_classes
+imagenet_classes = pd.read_csv('./model_data/imagenet_classes.txt', header=None, index_col=[0])
 
 class SuperModel(nn.Module):
 
@@ -77,21 +82,34 @@ class SuperModel(nn.Module):
         # Resize segmentation to repnet shape:
         seg_masks_small = zoom(seg_masks, [1, 1 / 32, 1 / 32], order=0)  # e.g. shape [num_segs, 8, 13]
         result_dict = dict()
-        result_dict[0] = [code_global, 0, 0, pred_img, False, None]
+        pred_img = imagenet_classes.loc[pred_img][1]
+        result_dict[0] = dict(code=code_global,
+                              h=0,
+                              w=0,
+                              pred=pred_img,
+                              is_thing=False,
+                              seg_mask=None)
         for i, (seg_mask_small, seg_mask, seg_info) in enumerate(zip(seg_masks_small, seg_masks, segments_info)):
+
+            is_thing = seg_info['isthing']
 
             #### Get local code and meta:
             seg_mask_area = seg_mask_small.sum()
             code_local = (seg_mask_small[None] * codes).sum(-1).sum(-1) / (seg_mask_area + 1e-8)  # [8192, ]
             code_local = self.pca.transform(code_local[None])  # [1, 128]
             pred_item = seg_info['category_id']  # corresponds to `catalog` categories (thing or stuff)
+            pred_item = thing_classes[pred_item] if is_thing else stuff_classes[pred_item]
 
             # Visual center from large seg_mask:
             h_center, w_center = compute_visual_center(seg_mask)
 
-            isthing = seg_info['isthing']
+            result_dict[i+1] = dict(code=code_local,
+                                    h=h_center,
+                                    w=w_center,
+                                    pred=pred_item,
+                                    is_thing=is_thing,
+                                    seg_mask=seg_mask)
 
-            result_dict[i+1] = [code_local, h_center, w_center, pred_item, isthing, seg_mask]
 
         return result_dict
 

@@ -20,11 +20,16 @@ from core.dataio import Database, images_from_urls
 from core.models import SuperModel
 from core.augs import load_augs
 from core.config import RESIZE_TO, N_RETRIEVED_RESULTS
-from core.utils import get_query_plot, get_retrieval_plot
+from core.utils import get_query_plot, get_retrieval_plot, delete_plot_cache
 
-RESULTS = None
 DEBUGGING_WITHOUT_MODEL = False
 DEBUG_WITH_PREDS = True  # will show image, item preds in plots
+
+# TODO: hacky way of setting states as globals...
+RESULTS = None
+query_img_path = None
+retrieval_img_path = None  # not yet retrieved
+ids = None
 
 """
 
@@ -34,14 +39,10 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
 
 # Delete cache folder:
-try:
-    shutil.rmtree('./static/cache')
-    os.makedirs('./static/cache')
-except:
-    pass
+delete_plot_cache()
 
 # Set up video capture:
-videocap = cv2.VideoCapture(0)
+videocap = cv2.VideoCapture(-1)
 print(colored('Video capture device initialized', 'green'))
 
 # Set up database:  # TODO: protect codes and index! Needs refactoring!! Actually maybe
@@ -62,15 +63,11 @@ else:
     print(colored('Loading an existing NGTPY index...', 'green'))
     ngtpy_index = ngtpy.Index(index_path)
 
-# for sanity checks:
-catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
-thing_classes = catalog.thing_classes
-stuff_classes = catalog.stuff_classes
-
 # Load Supermodel:
 if DEBUGGING_WITHOUT_MODEL:
     supermodel = None
 else:
+    print(colored('Loading model...', 'green'))
     supermodel = SuperModel()
 
 # Def augs:
@@ -106,6 +103,7 @@ def generate_feed():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+
     # codes = list()
     # entities = list()
     # for _ in range(3):
@@ -137,40 +135,51 @@ def video_feed():
 
 @app.route('/query_image', methods=['GET', 'POST'])
 def query_image():
+
     global RESULTS
-    retrieval_img_path = None  # not yet retrieved
+    global query_img_path
+    global retrieval_img_path
+    global ids
+
     if 'restart' in request.form:
+        delete_plot_cache()
         print('Starting video feed...')
+        RESULTS = None
+        query_img_path = None
+        retrieval_img_path = None
+        ids = None
         return redirect(url_for('show_feed'))
     elif any(['entity' in key for key in request.form.keys()]):  # query entities or entire image
-        item_id = eval(list(request.form.keys())[0].split('_')[-1])
-        code, h_center, w_center, pred, isthing, seg_mask = RESULTS[item_id]
+        item_id = eval(list(request.form.keys())[0].split('_')[-1])  # TODO: check that getting correct value!
+        #code, h_center, w_center, pred, isthing, seg_mask = RESULTS[item_id]
+        img_meta = RESULTS[item_id]
 
         # Search for nns:
-        query_results = ngtpy_index.search(code, N_RETRIEVED_RESULTS)
+        query_results = ngtpy_index.search(img_meta['code'], N_RETRIEVED_RESULTS)
         indices, dists = list(zip(*query_results))
 
         retrieval_img_path = get_retrieval_plot(indices, entities, debug_mode=DEBUG_WITH_PREDS)
 
-    img = get_numpy_frame()  # [480, 640, 3] uint8 by default
-    img_orig = Image.fromarray(img)
-    img_aug = augs['augs_base'](img_orig)  # [256, .., 3] or [.., 256, 3]; stil PIL
+    else:  # take photo
 
-    # supermodel out:
-    if DEBUGGING_WITHOUT_MODEL:  # debugging
-        results_load = np.load('supermodel_out.npz', allow_pickle=True)
-        RESULTS = {int(key): results_load[key] for key in results_load.files}
-    else:
-        RESULTS = supermodel(img_aug)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
+        img = get_numpy_frame()  # take photo; [480, 640, 3] uint8 by default
+        img_orig = Image.fromarray(img)
+        img_aug = augs['augs_base'](img_orig)  # [256, .., 3] or [.., 256, 3]; stil PIL
 
-    # bake in the segmentations to the PIL image:
-    query_img_path = get_query_plot(img_orig, img_aug, RESULTS, debug_mode=DEBUG_WITH_PREDS)
-    #query_img_path = os.path.abspath(query_img_path)
+        # supermodel out:
+        if DEBUGGING_WITHOUT_MODEL:  # debugging
+            results_load = np.load('supermodel_out.npz', allow_pickle=True)
+            RESULTS = {int(key): results_load[key] for key in results_load.files}
+        else:
+            RESULTS = supermodel(img_aug)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
 
-    # entity ids for HTML:
-    labels = ['Image']
-    labels += [str(i + 1) for i in range(len(RESULTS.keys()) - 1)]
-    ids = {label: 'entity_' + str(num) for label, num in zip(labels, np.arange(len(labels)))}
+        # bake in the segmentations to the PIL image:
+        query_img_path = get_query_plot(img_orig, img_aug, RESULTS, debug_mode=DEBUG_WITH_PREDS)
+
+        # entity ids for HTML:
+        labels = ['Image']
+        labels += [str(i + 1) for i in range(len(RESULTS.keys()) - 1)]
+        ids = {label: 'entity_' + str(num) for label, num in zip(labels, np.arange(len(labels)))}
 
     return render_template('query_image.html',
                            query_img_path=query_img_path,
