@@ -93,21 +93,25 @@ class Database:
             self.codes = self.h5file.root.codes
 
         self.table_keys = list(self.table.coldescrs.keys())
+"""code=code_local,
+    h=h_center,
+    w=w_center,
+    pred=pred_item,
+    is_thing=is_thing,
+    seg_mask=seg_mask"""
 
     def append_to_store(self,
                         url_,
-                        code_,
-                        pred_img_,
-                        h_center=0,
-                        w_center=0,
-                        pred_item=-1,
+                        code,
+                        pred,
+                        h=0,
+                        w=0,
                         is_thing=False,
                         global_code=True):
-        self.codes.append(code_.astype(np.float16))
+        self.codes.append(code.astype(np.float16))
         self.entities['url'] = url_
-        self.entities['prediction_image'] = pred_img_
-        self.entities['h_center'] = float(h_center)
-        self.entities['w_center'] = float(w_center)
+        self.entities['h_center'] = float(h)
+        self.entities['w_center'] = float(w)
         self.entities['global_code'] = global_code
         self.entities['prediction_item'] = pred_item
         self.entities['is_thing'] = is_thing

@@ -171,7 +171,7 @@ def query_image():
             results_load = np.load('supermodel_out.npz', allow_pickle=True)
             RESULTS = {int(key): results_load[key] for key in results_load.files}
         else:
-            RESULTS = supermodel(img_aug)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
+            RESULTS = supermodel(img_orig)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
 
         # bake in the segmentations to the PIL image:
         query_img_path = get_query_plot(img_orig, img_aug, RESULTS, debug_mode=DEBUG_WITH_PREDS)

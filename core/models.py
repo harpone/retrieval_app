@@ -57,10 +57,20 @@ class SuperModel(nn.Module):
     def forward(self, img):
         """
 
-        :param img: PIL image, transformed
+        :param img: PIL image, ORIGINAL shape
         :return: dict where index=0 is the global entity and index>0 are the local ones
         """
         # Segmentation:
+        img_aug = self.augs['augs_base'](img)
+
+        shape_orig = np.array(list(img.size))  # w, h
+        shape_current = np.array(list(img_aug.size))  # w', h'
+
+        # Compute rescaling factor from original and current image sizes:
+        aspect_orig = shape_orig[0] / shape_orig[1]
+        aspect_current = shape_current[0] / shape_current[1]
+        rescaler = aspect_orig / aspect_current
+
         outputs_seg = self.segnet(self.augs['augs_seg'](img))
         seg, segments_info = outputs_seg["panoptic_seg"]
         # visualize_segmentations(augs['augs_seg'](img), seg, segments_info)  # TODO: comment when done debugging
@@ -84,8 +94,8 @@ class SuperModel(nn.Module):
         result_dict = dict()
         pred_img = imagenet_classes.loc[pred_img][1]
         result_dict[0] = dict(code=code_global,
-                              h=0,
-                              w=0,
+                              h=-1,
+                              w=-1,
                               pred=pred_img,
                               is_thing=False,
                               seg_mask=None)
@@ -103,13 +113,19 @@ class SuperModel(nn.Module):
             # Visual center from large seg_mask:
             h_center, w_center = compute_visual_center(seg_mask)
 
+            # Adjust visual center to original image coords:
+            # Note that now shorter side is always size RESIZE_TO and therefore not cropped
+            if shape_orig[0] / shape_orig[1]:  # landscape: cropped in w
+                w_center /= rescaler
+            else:  # portrait: cropped in h
+                h_center *= rescaler
+
             result_dict[i+1] = dict(code=code_local,
                                     h=h_center,
                                     w=w_center,
                                     pred=pred_item,
                                     is_thing=is_thing,
                                     seg_mask=seg_mask)
-
 
         return result_dict
 
