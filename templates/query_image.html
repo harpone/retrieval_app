@@ -4,12 +4,19 @@
         <title>Title</title>
     <style>
     .img-box{
-        border: 4px solid #333;
+        {#border: 4px solid #333;#}
         display: block;
     }
     </style>
     </head>
     <body>
+    <script>
+    var items = document.querySelectorAll("img.NO-CACHE");
+for (var i = items.length; i--;) {
+    var img = items[i];
+    img.src = img.src + '?' + Date.now();
+}
+    </script>
     <form class="form-inline" method="post" action="/query_image">
         <input type="submit" name="restart" value="Restart">
         {% for label, num in ids.items() %}
@@ -18,7 +25,7 @@
       </form>
     <div class="img-box">
 {#        <img src="data:image/PNG;base64,{{img}}"/>#}
-        <img src="{{ query_img_path }}"/>
+        <img class="NO-CACHE" src="{{ query_img_path }}" alt=""/>
     </div>
     </body>
 

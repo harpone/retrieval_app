@@ -2,6 +2,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from PIL import Image
 import numpy as np
+import uuid
 from scipy.ndimage import zoom
 from detectron2 import model_zoo
 from detectron2.engine import DefaultPredictor
@@ -60,13 +61,15 @@ def fuse_results(img_orig, img_aug, results, figsize=10, encode_for_html=True):
         ax.imshow(seg_mask, alpha=.99, cmap='cool')  # if is_thing else None
         text_dict = dict(boxstyle="round", fc="white", ec="green")
         ax.annotate(key, (w_center - 2, h_center + 2), bbox=text_dict)
+        ax.set_axis_off()  # get rid of padding in figure
         # ax.annotate(pred_item, (w_center - 2, h_center + 2), bbox = text_dict)
 
     # make bytesIO:
     #buf = io.BytesIO()
-    query_img_path = './static/query_img.jpg'
-    fig.savefig(query_img_path, format='jpg')
-    query_img_path = 'static/query_img.jpg'  # need this for teh HTML
+    rnd_string = uuid.uuid1().hex[-16:]  # need unique filename to avoid browser using cache
+    query_img_path = './static/query_img.jpg' + '?' + rnd_string
+    fig.savefig(query_img_path, format='jpg', bbox_inches='tight', pad_inches=0)
+    query_img_path = query_img_path[2:]  # need this for teh HTML
     # buf.seek(0)
     # if encode_for_html:
     #     buf = base64.b64encode(buf.getvalue()).decode('ascii')
