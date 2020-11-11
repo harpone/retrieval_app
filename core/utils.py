@@ -25,7 +25,7 @@ thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
 
 
-def get_query_plot(img_orig, img_aug, results, figsize=10, encode_for_html=True):
+def get_query_plot(img_orig, img_aug, results, debug_mode=False):
     """
 
     :param img_orig: PIL image *before* augmentation
@@ -64,6 +64,9 @@ def get_query_plot(img_orig, img_aug, results, figsize=10, encode_for_html=True)
         # ax.scatter(w_center, h_center, s=500, c='r', marker='o', alpha=0.3)
         ax.imshow(seg_mask, alpha=.99, cmap='cool')  # if is_thing else None
         text_dict = dict(boxstyle="round", fc="white", ec="green")
+        if debug_mode:
+            pred_item = thing_classes[pred_item] if is_thing else stuff_classes[pred_item]
+            key = str(key) + ': ' + pred_item
         ax.annotate(key, (w_center - 2, h_center + 2), bbox=text_dict)
         ax.set_axis_off()  # get rid of padding in figure
         # ax.annotate(pred_item, (w_center - 2, h_center + 2), bbox = text_dict)
@@ -82,19 +85,23 @@ def get_query_plot(img_orig, img_aug, results, figsize=10, encode_for_html=True)
     return query_img_path
 
 
-def get_retrieval_plot(indices, entities):
+def get_retrieval_plot(indices, entities, debug_mode=False):
     # Get corresponding entities from database:  # TODO: refactor to get_retrieval_plot etc.
     # 1) get all paths, download images to PIL in parallel
     urls = list()
     h_centers = list()
     w_centers = list()
     is_globals = list()
+    preds_item = list()
+    is_things = list()
     for idx in indices:
         entity = entities[idx]
         h_centers.append(entity['h_center'])
         w_centers.append(entity['w_center'])
         urls.append(str(entity['url'], encoding='utf-8'))
         is_globals.append(entity['global_code'])
+        preds_item.append(entity['prediction_item'])
+        is_things.append(entity['is_thing'])
     images_ret = images_from_urls(urls)
 
     # 2) form 2 col, 3 row matplotlib plot with h_center, w_center scatter
@@ -106,6 +113,8 @@ def get_retrieval_plot(indices, entities):
         h_center = h_centers[n]
         w_center = w_centers[n]
         is_global = is_globals[n]
+        pred_item = preds_item[n]
+        is_thing = is_things[n]
 
         i = n // 2
         j = n % 2
@@ -113,6 +122,11 @@ def get_retrieval_plot(indices, entities):
         ax[i, j].imshow(np.array(img_ret))
         if not is_global:
             ax[i, j].scatter(w_center * w, h_center * h, s=500, c='r', marker='o', alpha=0.3)
+            if debug_mode:
+                pred_item = thing_classes[pred_item] if is_thing else stuff_classes[pred_item]
+                text_dict = dict(boxstyle="round", fc="white", ec="green")
+                ax[i, j].annotate(pred_item, (w_center * w - 2, h_center * h + 2), bbox=text_dict)
+
         ax[i, j].set_axis_off()
 
     rnd_string = uuid.uuid1().hex[-16:]  # need unique filename to avoid browser using cache

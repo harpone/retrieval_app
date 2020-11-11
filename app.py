@@ -24,6 +24,7 @@ from core.utils import get_query_plot, get_retrieval_plot
 
 RESULTS = None
 DEBUGGING_WITHOUT_MODEL = False
+DEBUG_WITH_PREDS = True  # will show image, item preds in plots
 
 """
 
@@ -149,7 +150,7 @@ def query_image():
         query_results = ngtpy_index.search(code, N_RETRIEVED_RESULTS)
         indices, dists = list(zip(*query_results))
 
-        retrieval_img_path = get_retrieval_plot(indices, entities)
+        retrieval_img_path = get_retrieval_plot(indices, entities, debug_mode=DEBUG_WITH_PREDS)
 
     img = get_numpy_frame()  # [480, 640, 3] uint8 by default
     img_orig = Image.fromarray(img)
@@ -163,7 +164,7 @@ def query_image():
         RESULTS = supermodel(img_aug)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
 
     # bake in the segmentations to the PIL image:
-    query_img_path = get_query_plot(img_orig, img_aug, RESULTS)
+    query_img_path = get_query_plot(img_orig, img_aug, RESULTS, debug_mode=DEBUG_WITH_PREDS)
     #query_img_path = os.path.abspath(query_img_path)
 
     # entity ids for HTML:
