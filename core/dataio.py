@@ -172,16 +172,16 @@ def images_from_urls(urls, num_processes=None):
     """Load multiple images from a list of urls in parallel.
 
     :param urls: list of strings
-    :param num_processes: int or None; will use all available processes if None
+    :param num_processes: 1 or None; will use all available processes if None
     :return:
     """
-    if num_processes is None:
-        num_processes = cpu_count()
 
     if num_processes == 1:
         images = [image_from_url(url) for url in urls]
-    else:
+    elif num_processes is None:
         with Pool() as pool:
             images = pool.map(image_from_url, urls)
+    else:
+        raise NotImplementedError
 
     return images
