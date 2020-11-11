@@ -10,6 +10,7 @@ from multiprocessing import Pool, cpu_count
 
 from core.config import CODE_LENGTH
 
+
 def capture_webcam():
     """Takes one photo with webcam.
 
@@ -46,14 +47,6 @@ class Database:
 
     def __init__(self, database_path, url_max_len=128, mode='w', title=None, expected_rows=1000000):
 
-        # try:
-        #     entities = self.h5file.root.entities
-        #     url_max_len = entities.coldtypes['url'].itemsize
-        #     print('`url_max_len` overrided from opened database!')
-        # except:  # TODO: catch
-        #     entities = None
-        #     pass
-
         class Entity(tb.IsDescription):
             """Metadata for a given item. Aligned with `code_arr` and `segmask_arr`.
 
@@ -63,11 +56,9 @@ class Database:
             global_code: bool; True if image level global code
             """
             url = tb.StringCol(url_max_len)
-            h_center = tb.Float16Col()
-            w_center = tb.Float16Col()
-            global_code = tb.BoolCol()
-            prediction_image = tb.Int32Col()
-            prediction_item = tb.Int32Col()
+            h = tb.Float16Col()
+            w = tb.Float16Col()
+            pred = tb.StringCol(32)
             is_thing = tb.BoolCol()
 
         if mode == 'w':
@@ -93,27 +84,19 @@ class Database:
             self.codes = self.h5file.root.codes
 
         self.table_keys = list(self.table.coldescrs.keys())
-"""code=code_local,
-    h=h_center,
-    w=w_center,
-    pred=pred_item,
-    is_thing=is_thing,
-    seg_mask=seg_mask"""
 
     def append_to_store(self,
-                        url_,
-                        code,
-                        pred,
+                        url=None,
+                        code=None,
                         h=0,
                         w=0,
-                        is_thing=False,
-                        global_code=True):
+                        pred=None,
+                        is_thing=False):
         self.codes.append(code.astype(np.float16))
-        self.entities['url'] = url_
-        self.entities['h_center'] = float(h)
-        self.entities['w_center'] = float(w)
-        self.entities['global_code'] = global_code
-        self.entities['prediction_item'] = pred_item
+        self.entities['url'] = url
+        self.entities['h'] = float(h)
+        self.entities['w'] = float(w)
+        self.entities['pred'] = pred
         self.entities['is_thing'] = is_thing
         self.entities.append()
 
@@ -125,12 +108,10 @@ class Database:
                 code, entity = other[i]
                 self.append_to_store(str(entity['url'], encoding='utf-8'),
                                      code[None],
-                                     entity['prediction_image'],
-                                     entity['h_center'],
-                                     entity['w_center'],
-                                     entity['prediction_item'],
-                                     entity['is_thing'],
-                                     entity['global_code'])
+                                     h=entity['h'],
+                                     w=entity['w'],
+                                     pred=entity['pred'],
+                                     is_thing=entity['is_thing'])
                 i += 1
             except TypeError:  # TODO: catch
                 raise

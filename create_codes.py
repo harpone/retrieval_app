@@ -130,7 +130,7 @@ def create_codes(gpu,
 
             for id_, result_this in results.items():
                 counter_codes += 1
-                database.append_to_store(**result_this)
+                database.append_to_store(url=image_url, **result_this)
 
 
 
