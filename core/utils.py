@@ -16,13 +16,16 @@ import io
 import os
 import base64
 
+from core.dataio import images_from_urls
+from core.config import N_RETRIEVED_RESULTS
+
 
 catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
 thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
 
 
-def fuse_results(img_orig, img_aug, results, figsize=10, encode_for_html=True):
+def get_query_plot(img_orig, img_aug, results, figsize=10, encode_for_html=True):
     """
 
     :param img_orig: PIL image *before* augmentation
@@ -77,6 +80,48 @@ def fuse_results(img_orig, img_aug, results, figsize=10, encode_for_html=True):
     #     buf = base64.b64encode(buf.getvalue()).decode('ascii')
 
     return query_img_path
+
+
+def get_retrieval_plot(indices, entities):
+    # Get corresponding entities from database:  # TODO: refactor to get_retrieval_plot etc.
+    # 1) get all paths, download images to PIL in parallel
+    urls = list()
+    h_centers = list()
+    w_centers = list()
+    is_globals = list()
+    for idx in indices:
+        entity = entities[idx]
+        h_centers.append(entity['h_center'])
+        w_centers.append(entity['w_center'])
+        urls.append(str(entity['url'], encoding='utf-8'))
+        is_globals.append(entity['global_code'])
+    images_ret = images_from_urls(urls)
+
+    # 2) form 2 col, 3 row matplotlib plot with h_center, w_center scatter
+    fig, ax = plt.subplots(N_RETRIEVED_RESULTS // 2, 2)
+    for n in range(len(images_ret)):
+        img_ret = images_ret[n]
+        img_ret = np.array(img_ret)
+        h, w = img_ret.shape[:-1]
+        h_center = h_centers[n]
+        w_center = w_centers[n]
+        is_global = is_globals[n]
+
+        i = n // 2
+        j = n % 2
+
+        ax[i, j].imshow(np.array(img_ret))
+        if not is_global:
+            ax[i, j].scatter(w_center * w, h_center * h, s=500, c='r', marker='o', alpha=0.3)
+        ax[i, j].set_axis_off()
+
+    rnd_string = uuid.uuid1().hex[-16:]  # need unique filename to avoid browser using cache
+    retrieval_img_path = f'./static/cache/retrieval_img_{rnd_string}.jpg'
+    os.makedirs('./static/cache/', exist_ok=True)
+    fig.savefig(retrieval_img_path, format='jpg', bbox_inches='tight', pad_inches=0)
+    retrieval_img_path = retrieval_img_path[2:]
+
+    return retrieval_img_path
 
 
 def visualize_segmentations(img, seg, seg_info):

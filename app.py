@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, url_for, flash, redirect, Res
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from werkzeug.exceptions import abort
 import torch
+import uuid
 import base64
 import io
 import shutil
@@ -13,16 +14,16 @@ from detectron2.data import MetadataCatalog, DatasetCatalog
 import cv2
 from termcolor import colored
 from PIL import Image
+import matplotlib.pyplot as plt
 
 from core.dataio import Database, images_from_urls
 from core.models import SuperModel
 from core.augs import load_augs
-from core.config import RESIZE_TO
-from core.utils import fuse_results
+from core.config import RESIZE_TO, N_RETRIEVED_RESULTS
+from core.utils import get_query_plot, get_retrieval_plot
 
 RESULTS = None
 DEBUGGING_WITHOUT_MODEL = True
-N_RETRIEVED_RESULTS = 6
 
 """
 
@@ -148,22 +149,7 @@ def query_image():
         query_results = ngtpy_index.search(code, N_RETRIEVED_RESULTS)
         indices, dists = list(zip(*query_results))
 
-        # Get corresponding entities from database:
-        # 1) get all paths, download images to PIL, preprocess (eventually in parallel)
-        urls = list()
-        h_centers = list()
-        w_centers = list()
-        for idx in indices:
-            entity = entities[idx]
-            h_centers.append(entity['h_center'])
-            w_centers.append(entity['w_center'])
-            urls.append(str(entity['url'], encoding='utf-8'))
-        images = images_from_urls(urls, num_processes=1)
-
-        # 2) form 2 col, 3 row matplotlib plot with h_center, w_center scatter
-        # 3) pass to below with `retrieval_img_path`
-
-        print(item_id)
+        retrieval_img_path = get_retrieval_plot(indices, entities)
 
     img = get_numpy_frame()  # [480, 640, 3] uint8 by default
     img_orig = Image.fromarray(img)
@@ -177,7 +163,7 @@ def query_image():
         RESULTS = supermodel(img_aug)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
 
     # bake in the segmentations to the PIL image:
-    query_img_path = fuse_results(img_orig, img_aug, RESULTS)
+    query_img_path = get_query_plot(img_orig, img_aug, RESULTS)
     #query_img_path = os.path.abspath(query_img_path)
 
     # entity ids for HTML:
