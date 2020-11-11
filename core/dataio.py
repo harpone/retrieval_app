@@ -6,6 +6,7 @@ import os
 import cv2
 from os.path import join
 from google.cloud import storage
+from multiprocessing import Pool, cpu_count
 
 from core.config import CODE_LENGTH
 
@@ -165,3 +166,22 @@ def image_from_url(url):
         img = None
 
     return img
+
+
+def images_from_urls(urls, num_processes=None):
+    """Load multiple images from a list of urls in parallel.
+
+    :param urls: list of strings
+    :param num_processes: int or None; will use all available processes if None
+    :return:
+    """
+    if num_processes is None:
+        num_processes = cpu_count()
+
+    if num_processes == 1:
+        images = [image_from_url(url) for url in urls]
+    else:
+        with Pool() as pool:
+            images = pool.map(image_from_url, urls)
+
+    return images

@@ -14,7 +14,7 @@ import cv2
 from termcolor import colored
 from PIL import Image
 
-from core.dataio import Database
+from core.dataio import Database, images_from_urls
 from core.models import SuperModel
 from core.augs import load_augs
 from core.config import RESIZE_TO
@@ -22,7 +22,7 @@ from core.utils import fuse_results
 
 RESULTS = None
 DEBUGGING_WITHOUT_MODEL = True
-N_RETRIEVED_RESULTS = 5
+N_RETRIEVED_RESULTS = 6
 
 """
 
@@ -45,6 +45,7 @@ print(colored('Video capture device initialized', 'green'))
 # Set up database:  # TODO: protect codes and index! Needs refactoring!! Actually maybe
 database = Database('/home/heka/database/test_50k.h5', mode='r')
 codes = database.codes
+entities = database.table  # use .table for retrieval, table.row for insertion
 
 # Build index if one doesn't exist:
 index_path = './model_data/ngtpy_index'
@@ -135,6 +136,7 @@ def video_feed():
 @app.route('/query_image', methods=['GET', 'POST'])
 def query_image():
     global RESULTS
+    retrieval_img_path = None  # not yet retrieved
     if 'restart' in request.form:
         print('Starting video feed...')
         return redirect(url_for('show_feed'))
@@ -147,35 +149,46 @@ def query_image():
         indices, dists = list(zip(*query_results))
 
         # Get corresponding entities from database:
+        # 1) get all paths, download images to PIL, preprocess (eventually in parallel)
+        urls = list()
+        h_centers = list()
+        w_centers = list()
+        for idx in indices:
+            entity = entities[idx]
+            h_centers.append(entity['h_center'])
+            w_centers.append(entity['w_center'])
+            urls.append(str(entity['url'], encoding='utf-8'))
+        images = images_from_urls(urls, num_processes=1)
 
-
-
-
+        # 2) form 2 col, 3 row matplotlib plot with h_center, w_center scatter
+        # 3) pass to below with `retrieval_img_path`
 
         print(item_id)
-        return redirect(url_for('query_image'))
-    else:  # will just redisplay original snapshot
-        img = get_numpy_frame()  # [480, 640, 3] uint8 by default
-        img_orig = Image.fromarray(img)
-        img_aug = augs['augs_base'](img_orig)  # [256, .., 3] or [.., 256, 3]; stil PIL
 
-        # supermodel out:
-        if DEBUGGING_WITHOUT_MODEL:  # debugging
-            results_load = np.load('supermodel_out.npz', allow_pickle=True)
-            RESULTS = {int(key): results_load[key] for key in results_load.files}
-        else:
-            RESULTS = supermodel(img_aug)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
+    img = get_numpy_frame()  # [480, 640, 3] uint8 by default
+    img_orig = Image.fromarray(img)
+    img_aug = augs['augs_base'](img_orig)  # [256, .., 3] or [.., 256, 3]; stil PIL
 
-        # bake in the segmentations to the PIL image:
-        query_img_path = fuse_results(img_orig, img_aug, RESULTS)
-        #query_img_path = os.path.abspath(query_img_path)
+    # supermodel out:
+    if DEBUGGING_WITHOUT_MODEL:  # debugging
+        results_load = np.load('supermodel_out.npz', allow_pickle=True)
+        RESULTS = {int(key): results_load[key] for key in results_load.files}
+    else:
+        RESULTS = supermodel(img_aug)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
 
-        # entity ids for HTML:
-        labels = ['Image']
-        labels += [str(i + 1) for i in range(len(RESULTS.keys()) - 1)]
-        ids = {label: 'entity_' + str(num) for label, num in zip(labels, np.arange(len(labels)))}
+    # bake in the segmentations to the PIL image:
+    query_img_path = fuse_results(img_orig, img_aug, RESULTS)
+    #query_img_path = os.path.abspath(query_img_path)
 
-        return render_template('query_image.html', query_img_path=query_img_path, ids=ids)
+    # entity ids for HTML:
+    labels = ['Image']
+    labels += [str(i + 1) for i in range(len(RESULTS.keys()) - 1)]
+    ids = {label: 'entity_' + str(num) for label, num in zip(labels, np.arange(len(labels)))}
+
+    return render_template('query_image.html',
+                           query_img_path=query_img_path,
+                           ids=ids,
+                           retrieval_img_path=retrieval_img_path)
 
 
 @app.route('/<int:idx>')
