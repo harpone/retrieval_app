@@ -101,29 +101,6 @@ def create_codes(gpu,
             counter_images += 1
             if img is None or img.mode != 'RGB':  # still PIL but transformed
                 continue
-            # shape_current = np.array(list(img.size))  # w, h
-            # counter_images += 1
-            #
-            # # Compute rescaling factor from original and current image sizes:
-            # aspect_orig = shape_orig[0] / shape_orig[1]
-            # aspect_current = shape_current[0] / shape_current[1]
-            # rescaler = aspect_orig / aspect_current
-
-            # # Segmentation:
-            # outputs_seg = segnet(augs['augs_seg'](img))
-            # seg, segments_info = outputs_seg["panoptic_seg"]
-            # # visualize_segmentations(augs['augs_seg'](img), seg, segments_info)  # TODO: comment when done debugging
-            # seg_masks = np.eye(seg.max() + 1)[seg.cpu().numpy()].transpose(2, 0, 1).astype(
-            #     bool)  # [num_segs, H_floor32, W_floor32]
-            #
-            # # Representation:
-            # logits, codes = repnet(augs['augs_rep'](img)[None].cuda())  # e.g. inp: [256, 416] out: [8192, 8, 13]
-            # pred_img = logits[0].argmax().cpu()  # TODO: sanity check several of these
-            # codes = codes[0].detach().cpu().numpy()  # e.g. shape [8192, 8, 13]
-            #
-            # #### Get global code and meta:
-            # code = codes.mean(-1).mean(-1)  # [8192, ]
-            # code = pca.transform(code[None])  # [1, 128]
 
             results = supermodel(img)
 
@@ -135,50 +112,8 @@ def create_codes(gpu,
                 if counter_codes % flush_every == 0:
                     database.flush()
 
-            # # Append: (visual center zero by def, no item pred)
-            # database.append_to_store(image_url, code, pred_img)
-            #
-            # # Resize segmentation to repnet shape:
-            # seg_masks_small = zoom(seg_masks, [1, 1 / 32, 1 / 32], order=0)  # e.g. shape [num_segs, 8, 13]
-            # for seg_mask_small, seg_mask, seg_info in zip(seg_masks_small[1:], seg_masks[1:], segments_info):
-            #     # TODO: now including also non-things, but maybe filter or post process later
-            #     counter_codes += 1
-            #
-            #     #### Get local code and meta:
-            #     seg_mask_area = seg_mask_small.sum()
-            #     code = (seg_mask_small[None] * codes).sum(-1).sum(-1) / (seg_mask_area + 1e-8)  # [8192, ]
-            #     code = models['pca'].transform(code[None])  # [1, 128]
-            #     pred_item = seg_info['category_id']  # corresponds to `catalog` categories (thing or stuff)
-            #
-            #     # Visual center from large seg_mask:
-            #     h_center, w_center = compute_visual_center(seg_mask)
-            #
-            #     # Adjust visual center to original image coords:
-            #     # Note that now shorter side is always size RESIZE_TO and therefore not cropped
-            #     if shape_orig[0] / shape_orig[1]:  # landscape: cropped in w
-            #         w_center /= rescaler
-            #     else:  # portrait: cropped in h
-            #         h_center *= rescaler
-            #
-            #     # Append:
-            #     database.append_to_store(image_url,
-            #                              code,
-            #                              pred_img,
-            #                              h_center=h_center,
-            #                              w_center=w_center,
-            #                              pred_item=pred_item,
-            #                              is_thing=seg_info['isthing'],
-            #                              global_code=False)
-            #
-            #     if counter_codes % flush_every == 0:
-            #         database.flush()
-
             print(f'\r{db_out_folder.split("/")[-1]}: images={counter_images}, codes={counter_codes} '
                   f':: {round(time.time() - start_time)} 'f'seconds', end='')
-
-            # profiling:
-            # if counter_images == 100:
-            #    break
 
     database.close()
 
@@ -196,8 +131,8 @@ if __name__ == '__main__':
 
     limit_to = 100
     num_gpus = 1
-    num_workers = 4
-    upload_to_storage = True
+    num_workers = 0
+    upload_to_storage = False  # TODO
 
     #urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-train0.tsv'
     urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-validation.tsv'
@@ -205,8 +140,9 @@ if __name__ == '__main__':
 
     db_out_basename = urls_path.split('/')[-1].split('.')[0]
 
-    print(colored('Downloading urls from online...', 'yellow'))
+    print(colored('Downloading urls from online...', 'yellow'), end='')
     df = pd.read_csv(urls_path, sep='\t', index_col=False, usecols=['TsvHttpData-1.0'])
+    print(colored('... done!', 'yellow'))
     image_urls_o = df['TsvHttpData-1.0'].values  # original size image urls
 
     # "thumbnails" instead of original:
