@@ -1,0 +1,9 @@
+ray
+pandas
+scipy
+joblib
+tables
+opencv-python
+scikit-learn
+scikit-image
+onnxruntime

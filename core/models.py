@@ -2,11 +2,13 @@ from detectron2 import model_zoo
 from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
 import matplotlib.pyplot as plt
+from termcolor import colored
+from google.cloud import storage
 
 import torch
 import torch.nn as nn
 from scipy.ndimage import zoom
-from joblib import load
+from joblib import load as load_joblib
 import numpy as np
 import pandas as pd
 from detectron2.data import MetadataCatalog, DatasetCatalog
@@ -14,7 +16,7 @@ from detectron2.data import MetadataCatalog, DatasetCatalog
 from core.resnet_wider import resnet50x4
 from core.config import RESIZE_TO
 from core.augs import load_augs
-from core.utils import visualize_segmentations, compute_visual_center
+from core.utils import visualize_segmentations, compute_visual_center, load_gcs_checkpoint
 
 catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
 thing_classes = catalog.thing_classes
@@ -32,8 +34,13 @@ class SuperModel(nn.Module):
         # repnet:
         with torch.no_grad():
             self.repnet = resnet50x4()
-            repnet_pth = './model_data/resnet50-4x.pth'
-            state_dict = torch.load(repnet_pth)['state_dict']
+            try:
+                repnet_pth = './model_data/resnet50-4x.pth'
+                state_dict = torch.load(repnet_pth)['state_dict']
+            except Exception as e:
+                print(colored('Local repnet checkpoint not found... downloading from GCS.', 'red'))
+                checkpoint = load_gcs_checkpoint('mldata-westeu', 'models/resnet50-4x.pth')
+                state_dict = checkpoint['state_dict']
             self.repnet.load_state_dict(state_dict)
             self.repnet.eval()
             self.repnet.cuda()
@@ -51,7 +58,16 @@ class SuperModel(nn.Module):
 
         # PCA
         # pca model (for per item codes):
-        self.pca = load('./model_data/pca_simclr_8192.joblib')  # TODO: from GCS or cache
+        pca_path = './model_data/pca_simclr_8192.joblib'
+        try:
+            self.pca = load_joblib(pca_path)
+        except Exception as e:
+            print(colored('Local pca checkpoint not found... downloading from GCS.', 'red'))
+            store = storage.Client()
+            bucket = store.bucket(bucketname)
+            blob = bucket.blob(blob_path)
+
+            checkpoint_bytes = blob.download_as_string()
 
         # Load augs:
         self.augs = load_augs(resize_to=RESIZE_TO)
