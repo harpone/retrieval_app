@@ -16,6 +16,8 @@ import io
 import os
 import base64
 import shutil
+from google.cloud import storage
+import torch
 
 from core.dataio import images_from_urls
 from core.config import N_RETRIEVED_RESULTS
@@ -24,6 +26,36 @@ from core.config import N_RETRIEVED_RESULTS
 catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
 thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
+
+
+def load_gcs_checkpoint(bucketname, blob_path):
+
+    store = storage.Client()
+    bucket = store.bucket(bucketname)
+    blob = bucket.blob(blob_path)
+
+    checkpoint_bytes = blob.download_as_string()  # about 5s
+    stream = io.BytesIO(checkpoint_bytes)
+
+    checkpoint = torch.load(stream, map_location='cpu')
+
+    return checkpoint
+
+
+def load_bytes_from_gcs(bucket_name, blob_name):
+    """Remember to close!
+
+    :param bucket:
+    :param blob:
+    :return: BytesIO stream
+    """
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(blob_name)
+    assert blob.exists(), f'Blob {blob_name} does not exist!'
+    blob_bytes = blob.download_as_string()
+
+    return blob_bytes
 
 
 def delete_plot_cache():
