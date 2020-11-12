@@ -198,7 +198,7 @@ if __name__ == '__main__':
 
     limit_to = 10000
     num_gpus = 1
-    num_workers = 2
+    num_workers = 4
     upload_to_storage = False
 
     #urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-train0.tsv'
