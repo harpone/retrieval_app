@@ -1,22 +1,15 @@
 from argparse import ArgumentParser
 import numpy as np
 import ngtpy
-from flask import Flask, render_template, request, url_for, flash, redirect, Response
-from wtforms import StringField, PasswordField, BooleanField, SubmitField
+from flask import Flask, render_template, request, url_for, redirect, Response
 from werkzeug.exceptions import abort
-import torch
-import uuid
-import base64
-import io
-import shutil
+
 import os
-from detectron2.data import MetadataCatalog, DatasetCatalog
 import cv2
 from termcolor import colored
 from PIL import Image
-import matplotlib.pyplot as plt
 
-from core.dataio import Database, images_from_urls
+from core.dataio import Database
 from core.models import SuperModel
 from core.augs import load_augs
 from core.config import RESIZE_TO, N_RETRIEVED_RESULTS

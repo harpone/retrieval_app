@@ -1,12 +1,9 @@
 import numpy as np
 import pandas as pd
-from scipy.ndimage import zoom
 import time
 import os
-from hashlib import md5
 from detectron2.data import MetadataCatalog, DatasetCatalog
 import torch.multiprocessing as mp
-from pyinstrument import Profiler
 import torch
 from os.path import join
 from torch.utils.data import DataLoader

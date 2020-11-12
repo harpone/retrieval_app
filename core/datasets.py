@@ -1,26 +1,6 @@
 import numpy as np
-from scipy.ndimage import zoom
-import matplotlib.pyplot as plt
 from torch.utils.data import Dataset
-import torch.nn.functional as F
-import PIL
-import io
-from PIL import Image
-import requests
-import warnings
-import pickle
-from google.cloud import storage
-import albumentations as alb
-from albumentations.pytorch.transforms import ToTensorV2
-import imgaug as ia
-import skimage.draw
-import cv2
-import six
-import pyarrow as pa
-from termcolor import colored
-from pyinstrument import Profiler
-import webdataset as wds
-from webdataset.filters import getfirst, default_collation_fn, batched, shuffle
+
 
 from core.dataio import image_from_url
 
