@@ -15,7 +15,6 @@ from albumentations.pytorch.transforms import ToTensorV2
 import imgaug as ia
 import skimage.draw
 import cv2
-import lmdb
 import six
 import pyarrow as pa
 from termcolor import colored
