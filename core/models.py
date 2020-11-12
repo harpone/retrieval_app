@@ -1,6 +1,8 @@
 from detectron2 import model_zoo
 from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
+import matplotlib.pyplot as plt
+
 import torch
 import torch.nn as nn
 from scipy.ndimage import zoom
@@ -60,8 +62,9 @@ class SuperModel(nn.Module):
         :param img: PIL image, ORIGINAL shape
         :return: dict where index=0 is the global entity and index>0 are the local ones
         """
+        # TODO: something's just FUCKED in item preds!!
         # Segmentation:
-        img_aug = self.augs['augs_base'](img)
+        img_aug = self.augs['augs_base'](img)  # safer to do transform here than in Dataset
 
         shape_orig = np.array(list(img.size))  # w, h
         shape_current = np.array(list(img_aug.size))  # w', h'
@@ -71,17 +74,16 @@ class SuperModel(nn.Module):
         aspect_current = shape_current[0] / shape_current[1]
         rescaler = aspect_orig / aspect_current
 
-        outputs_seg = self.segnet(self.augs['augs_seg'](img))
+        outputs_seg = self.segnet(self.augs['augs_seg'](img_aug))
         seg, segments_info = outputs_seg["panoptic_seg"]
         # visualize_segmentations(augs['augs_seg'](img), seg, segments_info)  # TODO: comment when done debugging
         seg_masks = np.eye(seg.max() + 1)[seg.cpu().numpy()].transpose(2, 0, 1).astype(bool)  # [num_segs, H_, W_]
 
         # Drop background:
-        segments_info = segments_info[1:]
         seg_masks = seg_masks[1:]
 
         # Representation:
-        logits, codes = self.repnet(self.augs['augs_rep'](img)[None].cuda())  # e.g. inp: [256, 416] out: [8192, 8, 13]
+        logits, codes = self.repnet(self.augs['augs_rep'](img_aug)[None].cuda())  # e.g. inp: [256, 416] out: [8192, 8, 13]
         pred_img = int(logits[0].argmax().cpu())  # TODO: sanity check several of these
         codes = codes[0].detach().cpu().numpy()  # e.g. shape [8192, 8, 13]
 

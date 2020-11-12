@@ -79,9 +79,9 @@ def create_codes(gpu,
     # Def augs:
     augs = load_augs(resize_to=RESIZE_TO)
 
-    # Def dataloader:  # TODO
+    # Def dataloader:
     image_urls_this = image_urls[gpu::num_gpus]  # split evenly for all devices
-    dataset = URLDataset(url_list=image_urls_this, transform=augs['augs_base'])
+    dataset = URLDataset(url_list=image_urls_this, transform=None)  # TODO: now None!!
 
     def drop_batch_dim(x_):
         return x_[0]
@@ -98,8 +98,8 @@ def create_codes(gpu,
     start_time = time.time()
     print('Begin generating codes.')
     with torch.no_grad():  # TODO: need this?
-        for img, image_url, shape_orig in dataloader:  # TODO: "TypeError: cannot unpack non-iterable NoneType object" at images=8
-
+        for img, image_url, shape_orig in dataloader:
+            counter_images += 1
             if img is None or img.mode != 'RGB':  # still PIL but transformed
                 continue
             # shape_current = np.array(list(img.size))  # w, h
@@ -130,10 +130,8 @@ def create_codes(gpu,
 
             for id_, result_this in results.items():
                 counter_codes += 1
+                del result_this['seg_mask']  # will not be stored for now
                 database.append_to_store(url=image_url, **result_this)
-
-
-
 
                 if counter_codes % flush_every == 0:
                     database.flush()
@@ -197,14 +195,14 @@ def create_codes(gpu,
 
 if __name__ == '__main__':
 
-    limit_to = 50000
+    limit_to = 1000
     num_gpus = 1
     num_workers = 2
-    upload_to_storage = True
+    upload_to_storage = False
 
     urls_path = '/home/heka/code/simclr-converter/open-images-dataset-validation.tsv'
     db_out_folder = f'/home/heka/database/'
-    db_out_basename = 'test_50k'
+    db_out_basename = 'test_1k_new'
 
     df = pd.read_csv(urls_path, sep='\t', index_col=False, usecols=['TsvHttpData-1.0'])
     image_urls_o = df['TsvHttpData-1.0'].values  # original size image urls
