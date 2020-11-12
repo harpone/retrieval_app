@@ -64,7 +64,7 @@ class SuperModel(nn.Module):
         except Exception as e:
             print(colored('Local pca checkpoint not found... downloading from GCS.', 'red'))
             blob_to_path(pca_path)
-            self.pca = load_joblib(pca_path)
+            self.pca = load_joblib('mldata-westeu', 'models/pca_simclr_8192.joblib', pca_path)
 
 
         # Load augs:
