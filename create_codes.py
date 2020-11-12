@@ -134,7 +134,7 @@ if __name__ == '__main__':
     num_workers = 2
     upload_to_storage = True
 
-    urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-train0.tsv'
+    urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-train0.tsv'  # about 1 min
     #urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-validation.tsv'
     db_out_folder = f'./database/'
 
