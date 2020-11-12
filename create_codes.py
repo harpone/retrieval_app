@@ -8,6 +8,7 @@ import torch
 from os.path import join
 from torch.utils.data import DataLoader
 import uuid
+from termcolor import colored
 
 from core.augs import load_augs, mask_to_fixed_shape
 from core.models import SuperModel
@@ -204,6 +205,7 @@ if __name__ == '__main__':
 
     db_out_basename = urls_path.split('/')[-1].split('.')[0]
 
+    print(colored('Downloading urls from online...', 'yellow'))
     df = pd.read_csv(urls_path, sep='\t', index_col=False, usecols=['TsvHttpData-1.0'])
     image_urls_o = df['TsvHttpData-1.0'].values  # original size image urls
 

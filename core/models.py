@@ -34,13 +34,13 @@ class SuperModel(nn.Module):
         # repnet:
         with torch.no_grad():
             self.repnet = resnet50x4()
+            repnet_pth = './model_data/resnet50-4x.pth'
             try:
-                repnet_pth = './model_data/resnet50-4x.pth'
                 state_dict = torch.load(repnet_pth)['state_dict']
             except Exception as e:
                 print(colored('Local repnet checkpoint not found... downloading from GCS.', 'red'))
-                checkpoint = load_gcs_checkpoint('mldata-westeu', 'models/resnet50-4x.pth')
-                state_dict = checkpoint['state_dict']
+                blob_to_path('mldata-westeu', 'models/resnet50-4x.pth', repnet_pth)
+                state_dict = torch.load(repnet_pth)['state_dict']
             self.repnet.load_state_dict(state_dict)
             self.repnet.eval()
             self.repnet.cuda()
@@ -63,8 +63,8 @@ class SuperModel(nn.Module):
             self.pca = load_joblib(pca_path)
         except Exception as e:
             print(colored('Local pca checkpoint not found... downloading from GCS.', 'red'))
-            blob_to_path(pca_path)
-            self.pca = load_joblib('mldata-westeu', 'models/pca_simclr_8192.joblib', pca_path)
+            blob_to_path('mldata-westeu', 'models/pca_simclr_8192.joblib', pca_path)
+            self.pca = load_joblib(pca_path)
 
 
         # Load augs:
