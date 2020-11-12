@@ -129,9 +129,9 @@ def create_codes(gpu,
 
 if __name__ == '__main__':
 
-    limit_to = 100
-    num_gpus = 1
-    num_workers = 0
+    limit_to = 1000
+    num_gpus = 4
+    num_workers = 2
     upload_to_storage = False  # TODO
 
     #urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-train0.tsv'
