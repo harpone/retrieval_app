@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy.ndimage import zoom
 import time
+import os
 from hashlib import md5
 from detectron2.data import MetadataCatalog, DatasetCatalog
 import torch.multiprocessing as mp
@@ -195,14 +196,16 @@ def create_codes(gpu,
 
 if __name__ == '__main__':
 
-    limit_to = 1000
+    limit_to = 10000
     num_gpus = 1
     num_workers = 2
     upload_to_storage = False
 
-    urls_path = '/home/heka/code/simclr-converter/open-images-dataset-validation.tsv'
+    #urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-train0.tsv'
+    urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-validation.tsv'
     db_out_folder = f'/home/heka/database/'
-    db_out_basename = 'test_1k_new'
+
+    db_out_basename = urls_path.split('/')[-1].split('.')[0]
 
     df = pd.read_csv(urls_path, sep='\t', index_col=False, usecols=['TsvHttpData-1.0'])
     image_urls_o = df['TsvHttpData-1.0'].values  # original size image urls
@@ -211,9 +214,12 @@ if __name__ == '__main__':
     image_urls_z = [url.replace('_o.jpg', '_z.jpg') for url in image_urls_o]
     image_urls_z = np.array(image_urls_z).astype(np.string_)[:limit_to]
 
+    os.makedirs(db_out_folder, exist_ok=True)
+
     if num_gpus > 1:
         add_random_hash = True
-        mp.spawn(create_codes, args=(image_urls_z, db_out_folder, db_out_basename, num_workers, upload_to_storage, add_random_hash))
+        mp.spawn(create_codes,
+                 args=(image_urls_z, db_out_folder, db_out_basename, num_workers, upload_to_storage, add_random_hash))
 
     else:
         add_random_hash = False
