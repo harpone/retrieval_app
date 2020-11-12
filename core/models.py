@@ -4,6 +4,7 @@ from detectron2.config import get_cfg
 import matplotlib.pyplot as plt
 from termcolor import colored
 from google.cloud import storage
+import time
 
 import torch
 import torch.nn as nn
@@ -40,6 +41,7 @@ class SuperModel(nn.Module):
             except Exception as e:
                 print(colored('Local repnet checkpoint not found... downloading from GCS.', 'red'))
                 blob_to_path('mldata-westeu', 'models/resnet50-4x.pth', repnet_pth)
+                time.sleep(1)
                 state_dict = torch.load(repnet_pth)['state_dict']
             self.repnet.load_state_dict(state_dict)
             self.repnet.eval()
