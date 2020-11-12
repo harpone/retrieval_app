@@ -16,7 +16,7 @@ from detectron2.data import MetadataCatalog, DatasetCatalog
 from core.resnet_wider import resnet50x4
 from core.config import RESIZE_TO
 from core.augs import load_augs
-from core.utils import visualize_segmentations, compute_visual_center, load_gcs_checkpoint
+from core.utils import visualize_segmentations, compute_visual_center, load_gcs_checkpoint, blob_to_path
 
 catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
 thing_classes = catalog.thing_classes
@@ -63,11 +63,9 @@ class SuperModel(nn.Module):
             self.pca = load_joblib(pca_path)
         except Exception as e:
             print(colored('Local pca checkpoint not found... downloading from GCS.', 'red'))
-            store = storage.Client()
-            bucket = store.bucket(bucketname)
-            blob = bucket.blob(blob_path)
+            blob_to_path(pca_path)
+            self.pca = load_joblib(pca_path)
 
-            checkpoint_bytes = blob.download_as_string()
 
         # Load augs:
         self.augs = load_augs(resize_to=RESIZE_TO)

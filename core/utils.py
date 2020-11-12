@@ -28,6 +28,14 @@ thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
 
 
+def blob_to_path(bucketname, blob_path, local_path):
+
+    store = storage.Client()
+    bucket = store.bucket(bucketname)
+    blob = bucket.blob(blob_path)
+    blob.download_to_filename(local_path)
+
+
 def load_gcs_checkpoint(bucketname, blob_path):
 
     store = storage.Client()
