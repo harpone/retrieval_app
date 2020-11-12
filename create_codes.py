@@ -136,7 +136,7 @@ if __name__ == '__main__':
 
     #urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-train0.tsv'
     urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-validation.tsv'
-    db_out_folder = f'/home/heka/database/'
+    db_out_folder = f'./database/'
 
     db_out_basename = urls_path.split('/')[-1].split('.')[0]
 
