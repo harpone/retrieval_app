@@ -129,13 +129,13 @@ def create_codes(gpu,
 
 if __name__ == '__main__':
 
-    limit_to = 1000
-    num_gpus = 4
+    limit_to = 10000000
+    num_gpus = 1
     num_workers = 2
-    upload_to_storage = False  # TODO
+    upload_to_storage = True  # TODO
 
-    #urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-train0.tsv'
-    urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-validation.tsv'
+    urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-train0.tsv'
+    #urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-validation.tsv'
     db_out_folder = f'./database/'
 
     db_out_basename = urls_path.split('/')[-1].split('.')[0]
