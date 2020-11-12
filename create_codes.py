@@ -194,7 +194,7 @@ def create_codes(gpu,
 
 if __name__ == '__main__':
 
-    limit_to = 10000
+    limit_to = 1000
     num_gpus = 1
     num_workers = 4
     upload_to_storage = False
