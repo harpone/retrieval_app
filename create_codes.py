@@ -188,7 +188,7 @@ def create_codes(gpu,
     if upload_to_storage:
         remote_path = join('databases', db_out_name)
         upload_to_gcs('mldata-westeu', join(db_out_folder, db_out_name), remote_path)
-        print(f'Results uploaded to {remote_path}')
+        print(f'\nResults uploaded to {remote_path}')
     return True
 
 
