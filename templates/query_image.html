@@ -13,7 +13,7 @@
 
     <form class="form-inline" method="post" action="/query_image">
         <input type="submit" name="home" value="Home">
-        <input type="submit" name="restart" value="Restart">
+        <input type="submit" name="restart" value="Retake">
         {% for label, num in ids.items() %}
             <input type="submit" name={{ num }} value={{ label }}>
         {% endfor %}
