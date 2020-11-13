@@ -129,7 +129,8 @@ def create_codes(gpu,
 
 if __name__ == '__main__':
 
-    limit_to = 1000
+    start_from = 0
+    end_at = 1000
     num_gpus = 1
     num_workers = 4
     upload_to_storage = True
@@ -138,7 +139,7 @@ if __name__ == '__main__':
     #urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-validation.tsv'
     db_out_folder = f'./database/'
 
-    db_out_basename = urls_path.split('/')[-1].split('.')[0]
+    db_out_basename = urls_path.split('/')[-1].split('.')[0] + '_' + str(start_from) + '_' + str(end_at)
 
     print(colored('Downloading urls from online...', 'yellow'), end='')
     df = pd.read_csv(urls_path, sep='\t', index_col=False, usecols=['TsvHttpData-1.0'])
@@ -147,7 +148,7 @@ if __name__ == '__main__':
 
     # "thumbnails" instead of original:
     image_urls_z = [url.replace('_o.jpg', '_z.jpg') for url in image_urls_o]
-    image_urls_z = np.array(image_urls_z).astype(np.string_)[:limit_to]
+    image_urls_z = np.array(image_urls_z).astype(np.string_)[start_from:end_at]
 
     os.makedirs(db_out_folder, exist_ok=True)
 
