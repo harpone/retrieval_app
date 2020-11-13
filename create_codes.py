@@ -135,6 +135,12 @@ if __name__ == '__main__':
     num_workers = 4
     upload_to_storage = True
 
+    print('**************************')
+    print(f'start_from={start_from}')
+    print(f'end_at={end_at}')
+    print(f'num_workers={num_workers}')
+    print('**************************')
+
     urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-train0.tsv'  # about 1 min
     #urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-validation.tsv'
     db_out_folder = f'./database/'
