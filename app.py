@@ -2,7 +2,12 @@ from argparse import ArgumentParser
 import numpy as np
 import ngtpy
 from flask import Flask, render_template, request, url_for, redirect, Response
+from flask_uploads import UploadSet, configure_uploads, IMAGES, patch_request_class
 from werkzeug.exceptions import abort
+from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileRequired, FileAllowed
+from wtforms import SubmitField
+
 
 import os
 import cv2
@@ -15,7 +20,7 @@ from core.augs import load_augs
 from core.config import RESIZE_TO, N_RETRIEVED_RESULTS
 from core.utils import get_query_plot, get_retrieval_plot, delete_plot_cache
 
-DEBUGGING_WITHOUT_MODEL = False
+DEBUGGING_WITHOUT_MODEL = False  # TODO: not up to date (loads a npz file instead of dict)
 DEBUG_WITH_PREDS = True  # will show image, item preds in plots
 
 # TODO: hacky way of setting states as globals...
@@ -23,6 +28,7 @@ RESULTS = None
 query_img_path = None
 retrieval_img_path = None  # not yet retrieved
 ids = None
+uploaded_filename = None
 
 """
 
@@ -30,6 +36,17 @@ ids = None
 # TODO: maybe all globals in uppercase?
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
+app.config['UPLOADED_PHOTOS_DEST'] = './static/cache'
+
+photos = UploadSet('photos', IMAGES)
+configure_uploads(app, photos)
+patch_request_class(app)
+
+
+class UploadForm(FlaskForm):
+    photo = FileField(validators=[FileAllowed(photos, u'Image only!'), FileRequired(u'File was empty!')])
+    submit = SubmitField(u'Upload')
+
 
 # Delete cache folder:
 delete_plot_cache()
@@ -96,22 +113,15 @@ def generate_feed():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-
-    # codes = list()
-    # entities = list()
-    # for _ in range(3):
-    #     idx = np.random.randint(100000)
-    #     code, entity = database[idx]
-    #     codes.append(code)
-    #     entity['idx'] = idx
-    #     entities.append(entity)
-    # return render_template('index.html', entities=entities)
     if 'stop' in request.form:
         print('Taking picture...')
         return redirect(url_for('query_image'))
     elif 'start' in request.form:
         print('Starting video feed...')
         return redirect(url_for('show_feed'))
+    elif 'upload' in request.form:
+        print('Going to upload page...')
+        return redirect(url_for('upload_photo'))
     else:
         return render_template('index.html')
 
@@ -126,6 +136,19 @@ def video_feed():
     return Response(generate_feed(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
+@app.route('/upload', methods=['GET', 'POST'])
+def upload_photo():
+    global uploaded_filename
+    form = UploadForm()
+    if form.validate_on_submit():
+        uploaded_filename = photos.save(form.photo.data)
+        file_url = photos.url(uploaded_filename)
+        return redirect(url_for('query_image'))
+    else:
+        file_url = None
+    return render_template('upload.html', form=form)
+
+
 @app.route('/query_image', methods=['GET', 'POST'])
 def query_image():
 
@@ -133,14 +156,24 @@ def query_image():
     global query_img_path
     global retrieval_img_path
     global ids
+    global uploaded_filename
 
-    if 'restart' in request.form:
+    if 'home' in request.form:
+        delete_plot_cache()
+        RESULTS = None
+        query_img_path = None
+        retrieval_img_path = None
+        ids = None
+        uploaded_filename = None
+        return redirect(url_for('index'))
+    elif 'restart' in request.form:
         delete_plot_cache()
         print('Starting video feed...')
         RESULTS = None
         query_img_path = None
         retrieval_img_path = None
         ids = None
+        uploaded_filename = None
         return redirect(url_for('show_feed'))
     elif any(['entity' in key for key in request.form.keys()]):  # query entities or entire image
         item_id = eval(list(request.form.keys())[0].split('_')[-1])  # TODO: check that getting correct value!
@@ -152,32 +185,48 @@ def query_image():
         indices, dists = list(zip(*query_results))
 
         retrieval_img_path = get_retrieval_plot(indices, entities, debug_mode=DEBUG_WITH_PREDS)
-
+    elif uploaded_filename is not None:  # uploaded photo
+        img = Image.open(os.path.join('./static/cache', uploaded_filename)).convert('RGB')
+        query_img_path, ids = process_image(img)
+        uploaded_filename = None
     else:  # take photo
 
         img = get_numpy_frame()  # take photo; [480, 640, 3] uint8 by default
-        img_orig = Image.fromarray(img)
-        img_aug = augs['augs_base'](img_orig)  # [256, .., 3] or [.., 256, 3]; stil PIL
-
-        # supermodel out:
-        if DEBUGGING_WITHOUT_MODEL:  # debugging
-            results_load = np.load('supermodel_out.npz', allow_pickle=True)
-            RESULTS = {int(key): results_load[key] for key in results_load.files}
-        else:
-            RESULTS = supermodel(img_orig)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
-
-        # bake in the segmentations to the PIL image:
-        query_img_path = get_query_plot(img_orig, img_aug, RESULTS, debug_mode=DEBUG_WITH_PREDS)
-
-        # entity ids for HTML:
-        labels = ['Image']
-        labels += [str(i + 1) for i in range(len(RESULTS.keys()) - 1)]
-        ids = {label: 'entity_' + str(num) for label, num in zip(labels, np.arange(len(labels)))}
+        img = Image.fromarray(img)
+        query_img_path, ids = process_image(img)
 
     return render_template('query_image.html',
                            query_img_path=query_img_path,
                            ids=ids,
                            retrieval_img_path=retrieval_img_path)
+
+
+def process_image(img_):
+    """
+
+    :param img_: PIL Image
+    :return:
+    """
+    global RESULTS
+    img_aug = augs['augs_base'](img_)  # [256, .., 3] or [.., 256, 3]; stil PIL
+
+    # supermodel out:
+    if DEBUGGING_WITHOUT_MODEL:  # debugging
+        results_load = np.load('supermodel_out.npz', allow_pickle=True)
+        RESULTS = {int(key): results_load[key] for key in results_load.files}
+    else:
+        RESULTS = supermodel(
+            img_)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
+
+    # bake in the segmentations to the PIL image:
+    query_img_path = get_query_plot(img_, img_aug, RESULTS, debug_mode=DEBUG_WITH_PREDS)
+
+    # entity ids for HTML:
+    labels = ['Image']
+    labels += [str(i + 1) for i in range(len(RESULTS.keys()) - 1)]
+    ids = {label: 'entity_' + str(num) for label, num in zip(labels, np.arange(len(labels)))}
+
+    return query_img_path, ids
 
 
 @app.route('/<int:idx>')
