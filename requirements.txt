@@ -10,3 +10,7 @@ scikit-image
 onnxruntime
 pyinstrument
 albumentations
+ngt
+Flask-Uploads
+Flask-Wtf
+termcolor

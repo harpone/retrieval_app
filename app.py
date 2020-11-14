@@ -58,7 +58,9 @@ videocap = cv2.VideoCapture(-1)
 print(colored('Video capture device initialized', 'green'))
 
 # Set up database:  # TODO: protect codes and index! Needs refactoring!! Actually maybe
-database = Database('/home/heka/database/test_50k.h5', mode='r')
+#db_path = '/home/heka/database/test_50k.h5'
+db_path = '/home/heka/database/open-images-dataset-train0_0_100000.h5'
+database = Database(db_path, mode='r')
 codes = database.codes
 entities = database.table  # use .table for retrieval, table.row for insertion
 
