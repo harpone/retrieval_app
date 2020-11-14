@@ -31,9 +31,11 @@ ids = None
 uploaded_filename = None
 
 """
+TODOs:
+- also db from GCS and as arg
+- ngtpy index corresponding to db name and re-index every time db is updated
 
 """
-# TODO: maybe all globals in uppercase?
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
 app.config['UPLOADED_PHOTOS_DEST'] = './static/cache'
