@@ -99,7 +99,7 @@ def create_codes(gpu,
     print('Begin generating codes.')
     with torch.no_grad():  # TODO: need this?
         #for img, image_url, shape_orig in dataloader:
-        dataloader_iterator = islice(iter(dataloader), 3)
+        dataloader_iterator = iter(dataloader)
         while True:
             try:
                 img, image_url, shape_orig = next(dataloader_iterator)
