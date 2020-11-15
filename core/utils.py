@@ -141,16 +141,14 @@ def get_retrieval_plot(indices, entities, debug_mode=False):
     urls = list()
     h_centers = list()
     w_centers = list()
-    is_globals = list()
     preds_item = list()
     is_things = list()
     for idx in indices:
         entity = entities[idx]
-        h_centers.append(entity['h_center'])
-        w_centers.append(entity['w_center'])
+        h_centers.append(entity['h'])
+        w_centers.append(entity['w'])
         urls.append(str(entity['url'], encoding='utf-8'))
-        is_globals.append(entity['global_code'])
-        preds_item.append(entity['prediction_item'])
+        preds_item.append(entity['pred'])
         is_things.append(entity['is_thing'])
     images_ret = images_from_urls(urls)
 
@@ -162,7 +160,6 @@ def get_retrieval_plot(indices, entities, debug_mode=False):
         h, w = img_ret.shape[:-1]
         h_center = h_centers[n]
         w_center = w_centers[n]
-        is_global = is_globals[n]
         pred_item = preds_item[n]
         is_thing = is_things[n]
 
@@ -170,10 +167,9 @@ def get_retrieval_plot(indices, entities, debug_mode=False):
         j = n % 2
 
         ax[i, j].imshow(np.array(img_ret))
-        if not is_global:
+        if h_center >= 0:
             ax[i, j].scatter(w_center * w, h_center * h, s=500, c='r', marker='o', alpha=0.3)
             if debug_mode:
-                pred_item = thing_classes[pred_item] if is_thing else stuff_classes[pred_item]
                 text_dict = dict(boxstyle="round", fc="white", ec="green")
                 ax[i, j].annotate(pred_item, (w_center * w - 2, h_center * h + 2), bbox=text_dict)
 

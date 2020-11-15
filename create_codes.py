@@ -5,6 +5,7 @@ import os
 from detectron2.data import MetadataCatalog, DatasetCatalog
 import torch.multiprocessing as mp
 import torch
+from itertools import islice
 from os.path import join
 from torch.utils.data import DataLoader
 import uuid
@@ -97,7 +98,17 @@ def create_codes(gpu,
     start_time = time.time()
     print('Begin generating codes.')
     with torch.no_grad():  # TODO: need this?
-        for img, image_url, shape_orig in dataloader:
+        #for img, image_url, shape_orig in dataloader:
+        dataloader_iterator = islice(iter(dataloader), 3)
+        while True:
+            try:
+                img, image_url, shape_orig = next(dataloader_iterator)
+            except StopIteration:
+                break
+            except Exception as e:  # need to skip if very rare error (pytorch urllib3.exceptions.ProtocolError)
+                print(e)
+                continue
+
             counter_images += 1
             if img is None or img.mode != 'RGB':  # still PIL but transformed
                 continue
@@ -132,7 +143,7 @@ if __name__ == '__main__':
     start_from = 100000
     end_at = 200000
     num_gpus = 1
-    num_workers = 4
+    num_workers = 0  # TODO
     upload_to_storage = True
 
     print('**************************')
