@@ -140,8 +140,8 @@ def create_codes(gpu,
 
 if __name__ == '__main__':
 
-    start_from = 100000
-    end_at = 225000
+    start_from = 225000
+    end_at = 350000
     num_gpus = 1
     num_workers = 4
     upload_to_storage = True
