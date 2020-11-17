@@ -77,7 +77,9 @@ def delete_plot_cache():
 
 
 def get_mask_around_center(mask, center, smooth_scale=1.):
-    """Chooses the connected component around visual `center`, smoothens it with Gaussian filter.
+    """Chooses the connected component around visual `center` and smoothens it with Gaussian filter.
+
+    About 7.61 ms @home on (256, 352) shape mask.
 
     :param mask: dtype=bool square numpy array
     :param center: tuple (w, h) of the visual center coordinates
