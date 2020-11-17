@@ -126,6 +126,7 @@ def get_query_plot(img_orig, img_aug, results, debug_mode=False):
     ax.set_xticks([])
     ax.set_yticks([])
 
+    seg_mask_canvas = None
     for key, vals in results.items():
         if key == 0:
             continue  # display nothing for global code
@@ -137,15 +138,26 @@ def get_query_plot(img_orig, img_aug, results, debug_mode=False):
         landscape = seg_mask.shape[1] > seg_mask.shape[0]
         seg_mask = np.pad(seg_mask, ((0, pad_amount if not landscape else 0), (0, pad_amount if landscape else 0)))
 
-        seg_mask = find_boundaries(seg_mask, mode='thick').astype(np.float32)
-        seg_mask[seg_mask < 1] = np.nan  # NaN is transparent
+        #seg_mask = find_boundaries(seg_mask, mode='thick').astype(np.float32)
+        #seg_mask[seg_mask < 1] = np.nan  # NaN is transparent
+
         w_center = vals['w']
         h_center = vals['h']
-        w_center *= img_orig.width
-        h_center *= img_orig.height
+        w_center = int(w_center * img_orig.width)
+        h_center = int(h_center * img_orig.height)
+
+        seg_mask = get_mask_around_center(seg_mask, (w_center, h_center)).astype(float)
+        seg_mask[seg_mask < 0.5] = np.nan  # nan is transparent
+
+        if seg_mask_canvas is None:
+            seg_mask_canvas = seg_mask
+        else:
+            seg_mask_canvas[seg_mask < 0.5] = key  # TODO: test!!!
+
         # pred_item = thing_classes[pred_item] if is_thing else stuff_classes[pred_item]
         # ax.scatter(w_center, h_center, s=500, c='r', marker='o', alpha=0.3)
-        ax.imshow(seg_mask, alpha=.99, cmap='cool')  # if is_thing else None
+        #seg_mask = seg_mask * key / (len(results) - 1)  # for display
+        #ax.imshow(seg_mask, alpha=.3, cmap='hsv', norm=None)  # if is_thing else None
         text_dict = dict(boxstyle="round", fc="white", ec="green")
         if debug_mode:
             #pred_item = thing_classes[pred_item] if is_thing else stuff_classes[pred_item]
@@ -153,6 +165,9 @@ def get_query_plot(img_orig, img_aug, results, debug_mode=False):
         ax.annotate(key, (w_center - 2, h_center + 2), bbox=text_dict)
         ax.set_axis_off()  # get rid of padding in figure
         # ax.annotate(pred_item, (w_center - 2, h_center + 2), bbox = text_dict)
+
+    # plot segmentations:
+    ax.imshow(seg_mask_canvas, alpha=.3, cmap='hsv', norm=None)  # if is_thing else None
 
     # make bytesIO:
     #buf = io.BytesIO()

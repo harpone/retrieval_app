@@ -23,7 +23,6 @@ from core.utils import get_query_plot, get_retrieval_plot, delete_plot_cache
 DEBUGGING_WITHOUT_MODEL = False  # TODO: not up to date (loads a npz file instead of dict)
 DEBUG_WITH_PREDS = True  # will show image, item preds in plots
 
-# TODO: hacky way of setting states as globals...
 RESULTS = None
 query_img_path = None
 retrieval_img_path = None  # not yet retrieved
@@ -31,11 +30,10 @@ ids = None
 uploaded_filename = None
 
 """
-TODOs:
-- also db from GCS and as arg
-- ngtpy index corresponding to db name and re-index every time db is updated
 
 """
+# TODO: resize to max size!! Now huge inputs will go through
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
 app.config['UPLOADED_PHOTOS_DEST'] = './static/cache'
