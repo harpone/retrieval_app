@@ -4,6 +4,8 @@ from PIL import Image
 import numpy as np
 import uuid
 from scipy.ndimage import zoom
+import skimage
+from skimage.filters import gaussian
 from detectron2 import model_zoo
 from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
@@ -72,6 +74,35 @@ def delete_plot_cache():
         os.makedirs('./static/cache')
     except:
         pass
+
+
+def get_mask_around_center(mask, center, smooth_scale=1.):
+    """Chooses the connected component around visual `center`, smoothens it with Gaussian filter.
+
+    :param mask: dtype=bool square numpy array
+    :param center: tuple (w, h) of the visual center coordinates
+    :param smooth_scale: float > 0
+    :return:
+    """
+    # Get connected components:
+    w, h = center
+    labels = skimage.measure.label(mask, return_num=False)
+
+    # Choose connected component containing visual center:
+    label_at_center = labels[h, w]
+    mask_around_center = labels == label_at_center
+
+    # Smoothen:
+    mask_area = mask_around_center.sum()
+    mask_smooth = gaussian(mask_around_center, sigma=smooth_scale * np.sqrt(mask_area) / 8)
+    mask_smooth = (mask_smooth > 0.5).astype(float)
+
+    # Connected comps again and select center one:
+    labels_smooth = skimage.measure.label(mask_smooth, return_num=False)
+    label_smooth_at_center = labels_smooth[h, w]
+    mask_smooth_around_center = labels_smooth == label_smooth_at_center
+
+    return mask_smooth_around_center
 
 
 def get_query_plot(img_orig, img_aug, results, debug_mode=False):
