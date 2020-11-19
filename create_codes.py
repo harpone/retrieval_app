@@ -55,7 +55,7 @@ def create_codes(gpu,
 
     # Define storage:
     flush_every = 1000
-    # h5file = tb.open_file(out_path, mode="w", title='OpenImages database, COCO labels for seg, ImageNet for image')
+    # h5file = tb.open_file(out_path, mode="w", title='OpenImages databases, COCO labels for seg, ImageNet for image')
     url_max_len = image_urls.dtype.itemsize
     # TODO: getting url_max_len from image_urls is fine when square byte array, but in a streaming scenario probably
     # need to set a sufficiently high number, e.g. 128

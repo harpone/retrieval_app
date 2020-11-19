@@ -55,9 +55,10 @@ delete_plot_cache()
 videocap = cv2.VideoCapture(-1)
 print(colored('Video capture device initialized', 'green'))
 
-# Set up database:  # TODO: protect codes and index! Needs refactoring!! Actually maybe
-#db_path = '/home/heka/database/test_50k.h5'
-db_path = '/home/heka/database/open-images-dataset-train0_0_100000.h5'
+# Set up databases:  # TODO: protect codes and index! Needs refactoring!! Actually maybe
+#db_path = '/home/heka/databases/test_50k.h5'
+db_path = '/home/heka/database/open-images-dataset-train0_0_475000.h5'
+#db_uri = 'gs://mldata-westeu/databases/open-images-dataset-train0_0_475000.h5'
 database = Database(db_path, mode='r')
 codes = database.codes
 entities = database.table  # use .table for retrieval, table.row for insertion
@@ -239,10 +240,11 @@ def post(idx):
 
 if __name__ == '__main__':
     # TODO: should I be using argparse? Maybe not...
+    # TODO: VITTU MITÄ VITTUA JOKU RIKKI?!?!?!?!?!??!?
     # parser = ArgumentParser(add_help=False)
     # parser.add_argument(
-    #     "--database-path",
-    #     default='/home/heka/database/test_50k',
+    #     "--databases-path",
+    #     default='/home/heka/databases/test_50k',
     #     type=str,
     # )
     # args = parser.parse_args()

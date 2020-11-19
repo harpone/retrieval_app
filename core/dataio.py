@@ -47,6 +47,13 @@ class Database:
 
     def __init__(self, database_path, url_max_len=128, mode='w', title=None, expected_rows=1000000):
 
+        if 'gs:' in database_path:  # get from cloud storage  # TODO: shit, refactor or delete
+            store = storage.Client()
+            bucket = store.bucket('mldata-westeu')
+            database_path = database_path.split('mldata-westeu')[-1]  # TODO fuck this is ugly
+            blob = bucket.blob(database_path[1:])
+            blob.download_to_filename(database_path)
+
         class Entity(tb.IsDescription):
             """Metadata for a given item. Aligned with `code_arr` and `segmask_arr`.
 
@@ -101,7 +108,8 @@ class Database:
         self.entities.append()
 
     def cat(self, other):
-
+        # TODO: about 1 min for 600k codes... faster way?
+        # TODO: how does perf suffer because expectedrows?
         i = 0
         while True:
             try:
