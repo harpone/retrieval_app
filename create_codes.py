@@ -48,6 +48,7 @@ def create_codes(gpu,
     """
     # profiler = Profiler()
     # profiler.start()
+    print(f'Process {gpu} started.')
 
     torch.cuda.set_device(gpu)
     num_gpus = torch.cuda.device_count()
@@ -134,7 +135,7 @@ def create_codes(gpu,
     if upload_to_storage:
         remote_path = join('databases', db_out_name)
         upload_to_gcs('mldata-westeu', join(db_out_folder, db_out_name), remote_path)
-        print(f'\nResults uploaded to {remote_path}')
+        print(f'\nProcess {gpu} results uploaded to {remote_path}')
     return True
 
 
