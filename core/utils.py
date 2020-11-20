@@ -184,7 +184,7 @@ def get_query_plot(img_orig, img_aug, results, debug_mode=False):
 
 
 def get_retrieval_plot(indices, entities, debug_mode=False):
-    # Get corresponding entities from databases:  # TODO: refactor to get_retrieval_plot etc.
+    # Get corresponding entities from database:  # TODO: refactor to get_retrieval_plot etc.
     # 1) get all paths, download images to PIL in parallel
     urls = list()
     h_centers = list()
