@@ -59,7 +59,7 @@ print(colored('Video capture device initialized', 'green'))
 
 # Set up database:  # TODO: protect codes and index! Needs refactoring!! Actually maybe
 #db_path = '/home/heka/database/test_50k.h5'
-db_path = '/home/heka/database/open-images-dataset-train0_0_475000.h5'
+db_path = '/home/heka/code/retrieval_app/database/open-images-dataset-train0_0_475000.h5'
 #db_uri = 'gs://mldata-westeu/database/open-images-dataset-train0_0_475000.h5'
 database = Database(db_path, mode='r')
 codes = database.codes
