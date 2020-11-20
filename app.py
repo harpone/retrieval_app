@@ -88,6 +88,8 @@ else:
 # Def augs:
 augs = load_augs(resize_to=RESIZE_TO)
 
+print('READY TO FLY!')
+
 
 def get_numpy_frame():
     ret, frame = videocap.read()  # frame [480, 640, 3] by default  # TODO: sometimes returns frame = None!
