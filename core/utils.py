@@ -122,7 +122,7 @@ def get_query_plot(img_orig, img_aug, results, debug_mode=False):
 
     fig, ax = plt.subplots(1, 1, figsize=(10, 10))
     img_np = np.array(img_orig)
-    ax.imshow(img_np)
+    ax.imshow(img_np)  # TODO: very large images => problems...
     ax.set_xticks([])
     ax.set_yticks([])
 
@@ -147,12 +147,11 @@ def get_query_plot(img_orig, img_aug, results, debug_mode=False):
         h_center = int(h_center * img_orig.height)
 
         seg_mask = get_mask_around_center(seg_mask, (w_center, h_center)).astype(float)
-        seg_mask[seg_mask < 0.5] = np.nan  # nan is transparent
 
         if seg_mask_canvas is None:
             seg_mask_canvas = seg_mask
         else:
-            seg_mask_canvas[seg_mask < 0.5] = key  # TODO: test!!!
+            seg_mask_canvas[seg_mask > 0.5] = key  # TODO: test!!!
 
         # pred_item = thing_classes[pred_item] if is_thing else stuff_classes[pred_item]
         # ax.scatter(w_center, h_center, s=500, c='r', marker='o', alpha=0.3)
@@ -167,6 +166,7 @@ def get_query_plot(img_orig, img_aug, results, debug_mode=False):
         # ax.annotate(pred_item, (w_center - 2, h_center + 2), bbox = text_dict)
 
     # plot segmentations:
+    seg_mask_canvas[seg_mask_canvas < 0.5] = np.nan  # nan is transparent
     ax.imshow(seg_mask_canvas, alpha=.3, cmap='hsv', norm=None)  # if is_thing else None
 
     # make bytesIO:

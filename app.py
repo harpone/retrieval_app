@@ -12,6 +12,7 @@ from wtforms import SubmitField
 import os
 import cv2
 from termcolor import colored
+import PIL
 from PIL import Image
 
 from core.dataio import Database
@@ -33,6 +34,7 @@ uploaded_filename = None
 
 """
 # TODO: resize to max size!! Now huge inputs will go through
+# TODO: postprocessing for huge images is very slow
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
@@ -211,6 +213,15 @@ def process_image(img_):
     :return:
     """
     global RESULTS
+
+    # Resize if image is huge:
+    size_overflow = np.max(img_.size) / 1024
+    if size_overflow > 1:
+        w, h = img_.size
+        w = int(w / size_overflow)
+        h = int(h / size_overflow)
+        img_ = img_.resize((w, h), resample=2)
+
     img_aug = augs['augs_base'](img_)  # [256, .., 3] or [.., 256, 3]; stil PIL
 
     # supermodel out:
@@ -240,7 +251,6 @@ def post(idx):
 
 if __name__ == '__main__':
     # TODO: should I be using argparse? Maybe not...
-    # TODO: VITTU MITÄ VITTUA JOKU RIKKI?!?!?!?!?!??!?
     # parser = ArgumentParser(add_help=False)
     # parser.add_argument(
     #     "--databases-path",
