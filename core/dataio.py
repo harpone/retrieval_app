@@ -102,6 +102,7 @@ class Database:
                     os.makedirs('~/model_data/', exist_ok=True)
                 db_name = database_path.split('/')[-1]
                 blob_to_path('mldata-westeu', join('databases', db_name), database_path)
+                self.h5file = tb.open_file(database_path, mode=mode)
 
             self.table = self.h5file.root.entities
             self.entities = self.table.row
