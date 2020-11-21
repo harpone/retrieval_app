@@ -18,7 +18,8 @@ from detectron2.data import MetadataCatalog, DatasetCatalog
 from core.resnet_wider import resnet50x4
 from core.config import RESIZE_TO
 from core.augs import load_augs
-from core.utils import visualize_segmentations, compute_visual_center, load_gcs_checkpoint, blob_to_path
+from core.utils import visualize_segmentations, compute_visual_center, load_gcs_checkpoint
+from core.dataio import blob_to_path
 
 catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
 thing_classes = catalog.thing_classes

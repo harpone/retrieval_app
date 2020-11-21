@@ -10,8 +10,14 @@ from multiprocessing import Pool, cpu_count
 from termcolor import colored
 
 from core.config import CODE_LENGTH
-from core.utils import blob_to_path
 
+
+def blob_to_path(bucketname, blob_path, local_path):
+
+    store = storage.Client()
+    bucket = store.bucket(bucketname)
+    blob = bucket.blob(blob_path)
+    blob.download_to_filename(local_path)
 
 
 def capture_webcam():
