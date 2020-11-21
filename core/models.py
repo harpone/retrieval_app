@@ -23,7 +23,7 @@ from core.utils import visualize_segmentations, compute_visual_center, load_gcs_
 catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
 thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
-imagenet_classes = pd.read_csv('./model_data/imagenet_classes.txt', header=None, index_col=[0])
+imagenet_classes = pd.read_csv('./misc/imagenet_classes.txt', header=None, index_col=[0])
 
 class SuperModel(nn.Module):
 

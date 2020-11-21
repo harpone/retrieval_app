@@ -7,8 +7,11 @@ import cv2
 from os.path import join
 from google.cloud import storage
 from multiprocessing import Pool, cpu_count
+from termcolor import colored
 
 from core.config import CODE_LENGTH
+from core.utils import blob_to_path
+
 
 
 def capture_webcam():
@@ -85,7 +88,15 @@ class Database:
                                                    expectedrows=expected_rows)
 
         else:
-            self.h5file = tb.open_file(database_path, mode=mode)
+            try:
+                self.h5file = tb.open_file(database_path, mode=mode)
+            except OSError:
+                print(colored('Local database not found... downloading from GCS.', 'red'))
+                if not os.path.exists('~/model_data/'):
+                    os.makedirs('~/model_data/', exist_ok=True)
+                db_name = database_path.split('/')[-1]
+                blob_to_path('mldata-westeu', join('databases', db_name), database_path)
+
             self.table = self.h5file.root.entities
             self.entities = self.table.row
             self.codes = self.h5file.root.codes
