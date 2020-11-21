@@ -66,10 +66,12 @@ codes = database.codes
 entities = database.table  # use .table for retrieval, table.row for insertion
 
 # Build index if one doesn't exist:
-index_path = './model_data/ngtpy_index'
+index_path = '~/model_data/ngtpy_index'
 if not os.path.exists(index_path):
     print(colored('Creating NGTPY index for the first time. '
                   'This can take a while (around 1s per 10k objects)...', 'green'))
+    if not os.path.exists('~/model_data/'):
+        os.makedirs('~/model_data/', exist_ok=True)
     ngtpy.create(path=index_path, dimension=128, object_type='Float')
     ngtpy_index = ngtpy.Index(index_path)
     ngtpy_index.batch_insert(np.array(codes))  # TODO: limits of batch_insert?  11s for 100k objects @home
