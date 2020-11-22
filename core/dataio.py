@@ -8,6 +8,7 @@ from os.path import join
 from google.cloud import storage
 from multiprocessing import Pool, cpu_count
 from termcolor import colored
+import time
 
 from core.config import CODE_LENGTH
 
@@ -102,6 +103,7 @@ class Database:
                     os.makedirs('~/model_data/', exist_ok=True)
                 db_name = database_path.split('/')[-1]
                 blob_to_path('mldata-westeu', join('databases', db_name), database_path)
+                time.sleep(1)
                 self.h5file = tb.open_file(database_path, mode=mode)
 
             self.table = self.h5file.root.entities

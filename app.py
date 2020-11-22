@@ -1,18 +1,18 @@
 from argparse import ArgumentParser
 import numpy as np
-import ngtpy
 from flask import Flask, render_template, request, url_for, redirect, Response
 from flask_uploads import UploadSet, configure_uploads, IMAGES, patch_request_class
 from werkzeug.exceptions import abort
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import SubmitField
-
 import os
 import cv2
 from termcolor import colored
 import PIL
 from PIL import Image
+import ngtpy
+
 
 from core.dataio import Database
 from core.models import SuperModel
@@ -254,6 +254,9 @@ def post(idx):
 
 if __name__ == '__main__':
     # TODO: should I be using argparse? Maybe not...
+    # TODO: arg for database to be used
+    # TODO: switch for reset index
+
     # parser = ArgumentParser(add_help=False)
     # parser.add_argument(
     #     "--database-path",
