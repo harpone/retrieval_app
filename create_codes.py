@@ -66,6 +66,7 @@ def create_codes(gpu,
         db_out_name = db_out_basename + '_' + uuid.uuid1().hex[:16] + '.h5'
     else:
         db_out_name = db_out_basename + '.h5'
+    print(colored(f'Saving database to {join(db_out_folder, db_out_name)}.'))
     database = Database(join(db_out_folder, db_out_name),
                         url_max_len=url_max_len,
                         mode='w',
