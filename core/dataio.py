@@ -97,7 +97,7 @@ class Database:
         else:
             try:
                 self.h5file = tb.open_file(database_path, mode=mode)
-            except OSError:
+            except:
                 print(colored('Local database not found... downloading from GCS.', 'red'))
                 if not os.path.exists('~/model_data/'):
                     os.makedirs('~/model_data/', exist_ok=True)

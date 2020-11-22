@@ -11,6 +11,7 @@ import cv2
 from termcolor import colored
 import PIL
 from PIL import Image
+from waitress import serve
 import ngtpy
 
 
@@ -60,6 +61,7 @@ print(colored('Video capture device initialized', 'green'))
 #db_path = '/home/heka/database/test_50k.h5'
 db_path = '~/model_data/open-images-dataset-train0_0_475000.h5'
 #db_uri = 'gs://mldata-westeu/database/open-images-dataset-train0_0_475000.h5'
+print(colored('Loading database...', 'green'))
 database = Database(db_path, mode='r')
 codes = database.codes
 entities = database.table  # use .table for retrieval, table.row for insertion
@@ -266,3 +268,6 @@ if __name__ == '__main__':
     # args = parser.parse_args()
 
     app.run(debug=False)
+    #this_files_dir = os.path.dirname(os.path.abspath(__file__))
+    #os.chdir(this_files_dir)
+    #serve(app, host='127.0.0.1', port=8001)
