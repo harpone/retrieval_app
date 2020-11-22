@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 import numpy as np
-from flask import Flask, render_template, request, url_for, redirect, Response
+from flask import Flask, render_template, request, url_for, redirect, Response, flash
 from flask_uploads import UploadSet, configure_uploads, IMAGES, patch_request_class
 from werkzeug.exceptions import abort
 from flask_wtf import FlaskForm
@@ -138,7 +138,11 @@ def index():
 
 @app.route('/show_feed')
 def show_feed():
-    return render_template('show_feed.html')
+    if videocap.isOpened():
+        return render_template('show_feed.html')
+    else:
+        flash('Not implemented yet...')
+        redirect(url_for('index'))
 
 
 @app.route('/video_feed')
