@@ -83,7 +83,7 @@ def get_mask_around_center(mask, center, smooth_scale=1.):
     labels = skimage.measure.label(mask, return_num=False)
 
     # Choose connected component containing visual center:
-    label_at_center = labels[h, w]
+    label_at_center = labels[h, w]  # TODO: sometimes IndexError: index 768 is out of bounds for axis 1 with size 768
     mask_around_center = labels == label_at_center
 
     # Smoothen:

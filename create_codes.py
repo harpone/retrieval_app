@@ -66,7 +66,11 @@ def create_codes(gpu,
         db_out_name = db_out_basename + '_' + uuid.uuid1().hex[:16] + '.h5'
     else:
         db_out_name = db_out_basename + '.h5'
-    database = Database(join(db_out_folder, db_out_name), url_max_len=url_max_len, mode='w', title=None, expected_rows=expectedrows)
+    database = Database(join(db_out_folder, db_out_name),
+                        url_max_len=url_max_len,
+                        mode='w',
+                        title=None,
+                        expected_rows=expectedrows)
 
     # Load models:
     # print('Loading models.')
@@ -155,7 +159,7 @@ if __name__ == '__main__':
 
     urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-train0.tsv'  # about 1 min
     #urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-validation.tsv'
-    db_out_folder = f'./database/'
+    db_out_folder = f'~/database/'
 
     db_out_basename = urls_path.split('/')[-1].split('.')[0] + '_' + str(start_from) + '_' + str(end_at)
 
