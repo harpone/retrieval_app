@@ -142,7 +142,7 @@ def show_feed():
         return render_template('show_feed.html')
     else:
         print('TRYING TO USE WEBCAM')
-        flash('Not implemented yet...')
+        #flash('Not implemented yet...')
         redirect(url_for('index'))
 
 
