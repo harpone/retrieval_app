@@ -141,6 +141,7 @@ def show_feed():
     if videocap.isOpened():
         return render_template('show_feed.html')
     else:
+        print('TRYING TO USE WEBCAM')
         flash('Not implemented yet...')
         redirect(url_for('index'))
 
