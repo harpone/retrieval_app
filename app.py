@@ -59,7 +59,7 @@ print(colored('Video capture device initialized', 'green'))
 
 # Set up database:  # TODO: protect codes and index! Needs refactoring!! Actually maybe
 #db_path = '/home/heka/database/test_50k.h5'
-db_path = '~/model_data/open-images-dataset-train0_0_475000.h5'
+db_path = '/home/heka/model_data/open-images-dataset-train0_0_475000.h5'
 #db_uri = 'gs://mldata-westeu/database/open-images-dataset-train0_0_475000.h5'
 print(colored('Loading database...', 'green'))
 database = Database(db_path, mode='r')
@@ -67,12 +67,12 @@ codes = database.codes
 entities = database.table  # use .table for retrieval, table.row for insertion
 
 # Build index if one doesn't exist:
-index_path = '~/model_data/ngtpy_index'
+index_path = '/home/heka/model_data/ngtpy_index'
 if not os.path.exists(index_path):
     print(colored('Creating NGTPY index for the first time. '
                   'This can take a while (around 1s per 10k objects)...', 'green'))
-    if not os.path.exists('~/model_data/'):
-        os.makedirs('~/model_data/', exist_ok=True)
+    if not os.path.exists('/home/heka/model_data/'):
+        os.makedirs('/home/heka/model_data/', exist_ok=True)
     ngtpy.create(path=index_path, dimension=128, object_type='Float')
     ngtpy_index = ngtpy.Index(index_path)
     ngtpy_index.batch_insert(np.array(codes))  # TODO: limits of batch_insert?  11s for 100k objects @home

@@ -13,7 +13,7 @@ import time
 from core.config import CODE_LENGTH
 
 
-def blob_to_path(bucketname, blob_path, local_path):
+def blob_to_path(bucketname, blob_path=None, local_path=None):
 
     store = storage.Client()
     bucket = store.bucket(bucketname)
@@ -55,14 +55,18 @@ def upload_to_gcs(bucketname, local_path, remote_path):
 
 class Database:
 
-    def __init__(self, database_path, url_max_len=128, mode='w', title=None, expected_rows=1000000):
+    def __init__(self, database_name, url_max_len=128, mode='w', title=None, expected_rows=1000000):
 
-        if 'gs:' in database_path:  # get from cloud storage  # TODO: shit, refactor or delete
-            store = storage.Client()
-            bucket = store.bucket('mldata-westeu')
-            database_path = database_path.split('mldata-westeu')[-1]  # TODO fuck this is ugly
-            blob = bucket.blob(database_path[1:])
-            blob.download_to_filename(database_path)
+        self.data_root = 'home/heka/model_data/'
+        if not os.path.exists(self.data_root):
+            os.makedirs(self.data_root, exist_ok=True)
+
+        # if 'gs:' in database_name:  # get from cloud storage  # TODO: shit, refactor or delete
+        #     store = storage.Client()
+        #     bucket = store.bucket('mldata-westeu')
+        #     database_name = database_name.split('mldata-westeu')[-1]  # TODO fuck this is ugly
+        #     blob = bucket.blob(database_name[1:])
+        #     blob.download_to_filename(database_name)
 
         class Entity(tb.IsDescription):
             """Metadata for a given item. Aligned with `code_arr` and `segmask_arr`.
@@ -79,7 +83,7 @@ class Database:
             is_thing = tb.BoolCol()
 
         if mode == 'w':
-            self.h5file = tb.open_file(database_path, mode=mode, title=title)
+            self.h5file = tb.open_file(join(self.data_root, database_name), mode=mode, title=title)
 
             # Schema:
             self.table = self.h5file.create_table(self.h5file.root,
@@ -96,15 +100,14 @@ class Database:
 
         else:
             try:
-                self.h5file = tb.open_file(database_path, mode=mode)
+                self.h5file = tb.open_file(join(self.data_root, database_name), mode=mode)
             except:
                 print(colored('Local database not found... downloading from GCS.', 'red'))
-                if not os.path.exists('~/model_data/'):
-                    os.makedirs('~/model_data/', exist_ok=True)
-                db_name = database_path.split('/')[-1]
-                blob_to_path('mldata-westeu', join('databases', db_name), database_path)
+                blob_to_path('mldata-westeu',
+                             blob_path=join('databases', database_name),
+                             local_path=join(self.data_root, database_name))
                 time.sleep(1)
-                self.h5file = tb.open_file(database_path, mode=mode)
+                self.h5file = tb.open_file(join(self.data_root, database_name), mode=mode)
 
             self.table = self.h5file.root.entities
             self.entities = self.table.row

@@ -34,7 +34,6 @@ stuff_classes = catalog.stuff_classes
 
 def create_codes(gpu,
                  image_urls,
-                 db_out_folder,
                  db_out_basename,
                  num_workers=1,
                  upload_to_storage=False,
@@ -43,7 +42,6 @@ def create_codes(gpu,
     into an hdf5 store together with the image filename. Store will be saved to `out_path`
 
     :param image_urls: list of strings
-    :param db_out_folder: base path where hdf5 store will be saved
     :return:
     """
     # profiler = Profiler()
@@ -66,8 +64,8 @@ def create_codes(gpu,
         db_out_name = db_out_basename + '_' + uuid.uuid1().hex[:16] + '.h5'
     else:
         db_out_name = db_out_basename + '.h5'
-    print(colored(f'Saving database to {join(db_out_folder, db_out_name)}.'))
-    database = Database(join(db_out_folder, db_out_name),
+    print(colored(f'Saving database to {join("~/model_data/", db_out_name)}'))
+    database = Database(db_out_name,
                         url_max_len=url_max_len,
                         mode='w',
                         title=None,
@@ -160,7 +158,6 @@ if __name__ == '__main__':
 
     urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-train1.tsv'  # about 1 min
     #urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-validation.tsv'
-    db_out_folder = f'~/database/'
 
     db_out_basename = urls_path.split('/')[-1].split('.')[0] + '_' + str(start_from) + '_' + str(end_at)
 
@@ -173,13 +170,11 @@ if __name__ == '__main__':
     image_urls_z = [url.replace('_o.jpg', '_z.jpg') for url in image_urls_o]
     image_urls_z = np.array(image_urls_z).astype(np.string_)[start_from:end_at]
 
-    os.makedirs(db_out_folder, exist_ok=True)
-
     if num_gpus > 1:
         add_random_hash = True
         mp.spawn(create_codes,
-                 args=(image_urls_z, db_out_folder, db_out_basename, num_workers, upload_to_storage, add_random_hash))
+                 args=(image_urls_z, db_out_basename, num_workers, upload_to_storage, add_random_hash))
 
     else:
         add_random_hash = False
-        create_codes(0, image_urls_z, db_out_folder, db_out_basename, num_workers, upload_to_storage, add_random_hash)
+        create_codes(0, image_urls_z, db_out_basename, num_workers, upload_to_storage, add_random_hash)
