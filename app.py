@@ -267,7 +267,7 @@ if __name__ == '__main__':
     # )
     # args = parser.parse_args()
 
-    app.run(debug=False)
-    #this_files_dir = os.path.dirname(os.path.abspath(__file__))
-    #os.chdir(this_files_dir)
-    #serve(app, host='127.0.0.1', port=8001)
+    #app.run(debug=False)
+    this_files_dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(this_files_dir)
+    serve(app, host='127.0.0.1', port=8001)
