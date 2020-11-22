@@ -145,8 +145,8 @@ def create_codes(gpu,
 
 if __name__ == '__main__':
 
-    start_from = 475000
-    end_at = 600000
+    start_from = 0
+    end_at = 1000000
     num_gpus = 1
     num_workers = 4
     upload_to_storage = True
@@ -157,7 +157,7 @@ if __name__ == '__main__':
     print(f'num_workers={num_workers}')
     print('**************************')
 
-    urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-train0.tsv'  # about 1 min
+    urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-train1.tsv'  # about 1 min
     #urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-validation.tsv'
     db_out_folder = f'~/database/'
 
