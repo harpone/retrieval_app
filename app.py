@@ -263,6 +263,7 @@ if __name__ == '__main__':
     # TODO: should I be using argparse? Maybe not...
     # TODO: arg for database to be used
     # TODO: switch for reset index
+    # TODO: def stuff like /home/heka/model_data/ in configs
 
     # parser = ArgumentParser(add_help=False)
     # parser.add_argument(

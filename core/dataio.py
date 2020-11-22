@@ -41,13 +41,13 @@ def capture_webcam():
     return frame
 
 
-def upload_to_gcs(bucketname, local_path, remote_path):
+def upload_to_gcs(bucketname, blob_path=None, local_path=None):
     """Upload a file to GCS.
 
     """
     store = storage.Client()
     bucket = store.bucket(bucketname)
-    blob = bucket.blob(remote_path)
+    blob = bucket.blob(blob_path)
     blob.upload_from_filename(local_path)
 
     return
@@ -57,7 +57,7 @@ class Database:
 
     def __init__(self, database_name, url_max_len=128, mode='w', title=None, expected_rows=1000000):
 
-        self.data_root = 'home/heka/model_data/'
+        self.data_root = '/home/heka/model_data/'
         if not os.path.exists(self.data_root):
             os.makedirs(self.data_root, exist_ok=True)
 

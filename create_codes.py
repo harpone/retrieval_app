@@ -64,7 +64,7 @@ def create_codes(gpu,
         db_out_name = db_out_basename + '_' + uuid.uuid1().hex[:16] + '.h5'
     else:
         db_out_name = db_out_basename + '.h5'
-    print(colored(f'Saving database to {join("~/model_data/", db_out_name)}'))
+    print(colored(f'Saving database to {join("/home/heka/model_data/", db_out_name)}'))
     database = Database(db_out_name,
                         url_max_len=url_max_len,
                         mode='w',
@@ -127,7 +127,7 @@ def create_codes(gpu,
                 if counter_codes % flush_every == 0:
                     database.flush()
 
-            print(f'\r{db_out_folder.split("/")[-1]}: images={counter_images}, codes={counter_codes} '
+            print(f'\rdevice {gpu}: images={counter_images}, codes={counter_codes} '
                   f':: {round(time.time() - start_time)} 'f'seconds', end='')
 
     database.close()
@@ -137,7 +137,7 @@ def create_codes(gpu,
 
     if upload_to_storage:
         remote_path = join('database', db_out_name)
-        upload_to_gcs('mldata-westeu', join(db_out_folder, db_out_name), remote_path)
+        upload_to_gcs('mldata-westeu', blob_path=remote_path, local_path=join('/home/heka/model_data/', db_out_name))
         print(f'\nProcess {gpu} results uploaded to {remote_path}')
     return True
 
