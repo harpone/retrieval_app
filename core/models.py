@@ -37,13 +37,13 @@ class SuperModel(nn.Module):
         # repnet:
         with torch.no_grad():
             self.repnet = resnet50x4()
-            repnet_pth = '~/model_data/resnet50-4x.pth'
+            repnet_pth = '/home/heka/model_data/resnet50-4x.pth'
             try:
                 state_dict = torch.load(repnet_pth)['state_dict']
             except Exception as e:
                 print(colored('Local repnet checkpoint not found... downloading from GCS.', 'red'))
-                if not os.path.exists('~/model_data/'):
-                    os.makedirs('~/model_data/', exist_ok=True)
+                if not os.path.exists('/home/heka/model_data/'):
+                    os.makedirs('/home/heka/model_data/', exist_ok=True)
                 blob_to_path('mldata-westeu', 'models/resnet50-4x.pth', repnet_pth)
                 time.sleep(1)
                 state_dict = torch.load(repnet_pth)['state_dict']
@@ -64,13 +64,13 @@ class SuperModel(nn.Module):
 
         # PCA
         # pca model (for per item codes):
-        pca_path = '~/model_data/pca_simclr_8192.joblib'
+        pca_path = '/home/heka/model_data/pca_simclr_8192.joblib'
         try:
             self.pca = load_joblib(pca_path)
         except Exception as e:
             print(colored('Local pca checkpoint not found... downloading from GCS.', 'red'))
-            if not os.path.exists('~/model_data/'):
-                os.makedirs('~/model_data/', exist_ok=True)
+            if not os.path.exists('/home/heka/model_data/'):
+                os.makedirs('/home/heka/model_data/', exist_ok=True)
             blob_to_path('mldata-westeu', 'models/pca_simclr_8192.joblib', pca_path)
             self.pca = load_joblib(pca_path)
 
