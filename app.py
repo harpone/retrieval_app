@@ -142,8 +142,8 @@ def show_feed():
         return render_template('show_feed.html')
     else:
         print('TRYING TO USE WEBCAM')
-        #flash('Not implemented yet...')
-        redirect(url_for('index'))
+        flash('Not implemented yet...')
+        return redirect(url_for('index'))
 
 
 @app.route('/video_feed')
