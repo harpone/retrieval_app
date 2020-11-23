@@ -30,6 +30,7 @@ retrieval_img_path = None  # not yet retrieved
 ids = None
 uploaded_filename = None
 
+
 """
 
 """
@@ -58,11 +59,9 @@ videocap = cv2.VideoCapture(-1)
 print(colored('Video capture device initialized', 'green'))
 
 # Set up database:  # TODO: protect codes and index! Needs refactoring!! Actually maybe
-#db_path = '/home/heka/database/test_50k.h5'
-db_path = '/home/heka/model_data/open-images-dataset-train0_0_475000.h5'
-#db_uri = 'gs://mldata-westeu/database/open-images-dataset-train0_0_475000.h5'
+database_name = 'open-images-dataset-train0_0_475000.h5'  # TODO: as arg maybe
 print(colored('Loading database...', 'green'))
-database = Database(db_path, mode='r')
+database = Database(database_name, mode='r')
 codes = database.codes
 entities = database.table  # use .table for retrieval, table.row for insertion
 

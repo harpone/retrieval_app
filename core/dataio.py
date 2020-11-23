@@ -101,7 +101,7 @@ class Database:
         else:
             try:
                 self.h5file = tb.open_file(join(self.data_root, database_name), mode=mode)
-            except:
+            except:  # TODO: catch? OSError at least
                 print(colored('Local database not found... downloading from GCS.', 'red'))
                 blob_to_path('mldata-westeu',
                              blob_path=join('databases', database_name),
