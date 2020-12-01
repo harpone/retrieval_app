@@ -7,8 +7,9 @@ from google.cloud import storage
 import os
 import time
 import pytorch_lightning as pl
-
 import torch
+import torch.optim as optim
+from torch.optim.lr_scheduler import MultiStepLR
 import torch.nn as nn
 from scipy.ndimage import zoom
 from joblib import load as load_joblib
@@ -21,7 +22,7 @@ from core.resnet_wider import resnet50x4
 from core.config import RESIZE_TO
 from core.augs import load_augs
 from core.utils import visualize_segmentations, compute_visual_center, load_gcs_checkpoint
-from core.dataio import blob_to_path
+from core.dataio import blob_to_path, get_dataloader
 
 catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
 thing_classes = catalog.thing_classes
@@ -29,6 +30,8 @@ stuff_classes = catalog.stuff_classes
 imagenet_classes = pd.read_csv('./misc/imagenet_classes.txt', header=None, index_col=[0])
 
 # TODO: check ConvHead out scale
+# TODO: compute_loss
+# TODO: get_dataloader
 
 
 class TheEye(pl.LightningModule):
@@ -38,6 +41,8 @@ class TheEye(pl.LightningModule):
 
     Bottleneck layer is a *linear* map from 8192 -> 128 with MaxEnt, i.e. essentially PCA. Optimize by minimizing
     the loss = -variance + lambda * (W.T.dot(W) - id) for each feature pixel (i.e. W is shared), or max knn entropy.
+    - Or maybe linear + tanh and knn-ent? Manhattan/Hamming dist. and easy generalization to hashing
+    - Or linear + layer norm and knn-ent, i.e. on S^{D-1}? Then cosine dist as metric
 
     To be used with OpenImages only for now.
 
@@ -52,24 +57,34 @@ class TheEye(pl.LightningModule):
         super().__init__()
         self.args = Munch(vars(args))  # Namespace to Munch dict
 
+        # TODO: eventually merge backbone and bottleneck to Encoder
         with torch.no_grad():
             self.backbone = resnet50x4()  # TODO: check that really no grad during training!!
-        self.bottleneck = PCALayer(8192, 128)  # TODO
+        self.bottleneck = nn.Conv2d(8192, 128, kernel_size=1)  # TODO: check out scale/ normalization
         self.seg_head = ConvHead(channels_in=128,
-                                 channels=args.segmentation_width,
+                                 channels=self.args.segmentation_width,
                                  channels_out=350,
-                                 depth=args.segmentation_depth,
+                                 depth=self.args.segmentation_depth,
                                  out_activation=nn.Tanh())  # <-- pos/neg gt is -1, +1 or None
 
-    def forward(self, x):
+    def forward(self, images):
 
-        features = self.backbone(x)
+        class_preds, features = self.backbone(images)  # carrying class_pred for sanity checks
         codes = self.bottleneck(features)
 
-        seg_pred = self.seg_head(codes.detach())  # codes will be trained with PCA loss
-        bbox_pred = self.bbox_head(codes.detach())
+        seg_preds = self.seg_head(codes.detach())  # codes will be trained with PCA/MaxEnt loss
 
-        return codes, seg_pred, bbox_pred
+        return codes, seg_preds, class_preds
+
+    def codify(self, images):
+        """Takes in an image tensor x, obtains codes, seg_pred and uses the predicted segmentations to generate
+        a code per detected item. Outputs also the segmentation and possibly other info.
+
+        :param images: torch.tensor shape [B, C, H, W]
+        :return:
+        """
+        codes, seg_preds, class_preds = self(images)
+        # TODO
 
     def training_step(self, batch, batch_idx):
 
@@ -77,52 +92,13 @@ class TheEye(pl.LightningModule):
         images = batch['images']
         targets = batch['targets']
 
-        codes, seg_pred, bbox_pred = self(images)
+        codes, seg_preds, class_preds = self(images)
 
-        loss_trn, metrics_trn = self.compute_losses(heads_out, targets)
+        loss_trn, metrics_trn = self.compute_losses(seg_preds, targets)
 
         self.log('loss_trn', loss_trn, sync_dist=True)
-        if self.args.get('classifier_head', False):
-            self.log('loss_xent_trn', metrics_trn['loss_xent'], sync_dist=True)
-            self.log('acc_trn', metrics_trn['acc'], sync_dist=True, prog_bar=True)
-        if self.args.get('sim_head', False):
-            self.log('loss_sim_trn', metrics_trn['loss_sim'], sync_dist=True, prog_bar=True)
-            if self.args.get('train_kl', False):
-                self.log('loss_kl', metrics_trn['loss_kl'], sync_dist=True)
-
-            z_mean = metrics_trn['z_mean']
-            self.log('z_mean', z_mean, sync_dist=True)
-            z_std = metrics_trn['z_std']
-            self.log('z_std', z_std, sync_dist=True)
-
-            # log similarities as image:
-            if batch_idx % 50 == 0:  # because can't use result.log TODO: will this screw up distributed training??
-                cosine_sims = metrics_trn['cosine_sims'].detach().cpu().numpy()
-                try:
-                    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-                    s = ax.imshow(cosine_sims)
-                    fig.colorbar(s, ax=ax)
-                    self.logger.experiment.log({'cosine_sims': fig})
-                    plt.close('all')
-                except:
-                    pass  # probably tensorboard logging issue so pass
-
-        # Log anomalous batch size:  TODO not working
-        # b_this = len(ys)
-        # if b_this != self.args.batch_size:
-        #     result.log('anomalous_batch_size', b_this)
-
-        # Log batch diversity:
-        num_unique_ids = targets.get('num_unique_ids', False)
-        if num_unique_ids:
-            fraction_of_unique_ids = 2 * num_unique_ids[0].float() / targets['class_id'].shape[0]
-            self.log('fraction_of_unique_ids', fraction_of_unique_ids, sync_dist=True)
-
-        # Completely nonsensical logging to make sure each node and process have unique batches:
-        # TODO: disable when AOK
-        # TODO: not logging from each device with sync_dist=False
-        # test_shuffle = ys['class_id'].sum()
-        # self.log('test_shuffle', test_shuffle, sync_dist=True, reduce_fx=torch.cat)
+        for key, val in metrics_trn.items():
+            self.log(key + '_trn', val, sync_dist=True, on_epoch=False)
 
         return loss_trn
 
@@ -132,76 +108,34 @@ class TheEye(pl.LightningModule):
         images = batch['images']
         targets = batch['targets']
 
-        features, heads_out = self(images)
+        codes, seg_preds, class_preds = self(images)
 
-        # Validation losses:
-        loss_val, metrics_val = self.compute_losses(heads_out, targets)
+        loss_val, metrics_trn = self.compute_losses(seg_preds, targets)
 
-        # Logging:
-        fig = visualize_openimages(images, targets, heads_out)
+        self.log('loss_val', loss_val, sync_dist=True)
+        for key, val in metrics_trn.items():
+            self.log(key + '_val', val, sync_dist=True, on_epoch=False)
 
-        self.log('val_loss', loss_val, sync_dist=True, on_epoch=True)
-        if self.args.get('classifier_head', False):
-            # Log classification acc:
-            # acc_val = metrics_val['acc']
-            # print(f'\n ACC_VAL={acc_val.item()}')
-            # self.log('acc_val', acc_val, sync_dist=True, on_epoch=True)
+        return loss_val
 
-            # Log xent:
-            self.log('loss_xent_val', metrics_val['loss_xent'], sync_dist=True, on_epoch=True)
-        if self.args.get('sim_head', False):
-            loss_sim_val = metrics_val['loss_sim']
-            self.log('loss_sim_val', loss_sim_val, sync_dist=True, on_epoch=True)
-
-            cosine_sims = metrics_val['cosine_sims'].detach().cpu().numpy()
-            try:
-                fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-                s = ax.imshow(cosine_sims)
-                fig.colorbar(s, ax=ax)
-                self.logger.experiment.log({'cosine_sims': fig})
-                plt.close('all')
-            except:
-                pass  # probably tensorboard logging issue so pass
-
-    def compute_losses(self, heads_out_, targets_):
+    def compute_losses(self, seg_preds_, targets_):
 
         loss = 0.
         metrics = dict()
 
-        if 'openimages' in self.args[
-            'dataset']:  # TODO: or rather get this from the `targets_` since different datasets
-            loss_this, metrics_this = compute_openimages_loss(heads_out_, targets_, self.args)
+        if 'openimages' in self.args['dataset']:
+            loss_this, metrics_this = compute_loss(seg_preds_, targets_, self.args)
             loss = loss + loss_this
             metrics.update(metrics_this)
 
         return loss, metrics
 
     def configure_optimizers(self):
-        if self.args.optimizer_name == "adam":
-            print("Using Adam optimizer.")
-            optimizer = optim.Adam(
-                params=self.parameters(),
-                lr=self.args.learning_rate,
-                betas=(0.9, 0.99))
-        elif self.args.optimizer_name == "sgd":
-            print("Using SGD optimizer.")
-            optimizer = optim.SGD(params=self.parameters(),
-                                  lr=self.args.learning_rate,
-                                  momentum=0.9,
-                                  weight_decay=self.args.weight_decay,
-                                  nesterov=True)
-            # scheduler = CosineAnnealingLR(optimizer, self.args.warmup_peak)
-            # TODO: warmup also maybe
-        elif self.args.optimizer_name == 'lamb':
-            print('Using LAMB optimizer.')
-            optimizer = Lamb(self.parameters(), lr=self.args.learning_rate, betas=(0.9, 0.999), eps=1e-6,
-                             weight_decay=self.args.weight_decay)
-        elif self.args.optimizer_name == 'lars':
-            print('Using Lars optimizer.')
-            optimizer = LARS(self.parameters(), lr=self.args.learning_rate, momentum=0.9, eta=1e-3, dampening=0,
-                             weight_decay=self.args.weight_decay, nesterov=False, epsilon=1e-8)
-        else:
-            optimizer = None  # let PL raise the appropriate error
+        print("Using Adam optimizer.")
+        optimizer = optim.Adam(
+            params=self.parameters(),
+            lr=self.args.learning_rate,
+            betas=(0.9, 0.99))
         scheduler = MultiStepLR(optimizer, milestones=self.args.decay_at_epochs, gamma=self.args.lr_decay_gamma)
         return [optimizer], [scheduler]
 
