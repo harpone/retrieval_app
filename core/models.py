@@ -28,16 +28,23 @@ thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
 imagenet_classes = pd.read_csv('./misc/imagenet_classes.txt', header=None, index_col=[0])
 
+# TODO: check ConvHead out scale
 
-class CombineOne(pl.LightningModule):
-    """Model with SimCLR backbone, bottleneck layer as well as segmentation and BB regression heads.
+
+class TheEye(pl.LightningModule):
+    """Model with SimCLR or other fully conv backbone, bottleneck layer and segmentation layer on top.
 
     By default, SimCLR is *detached* from the rest since it's very good and slow to train.
 
-    Bottleneck layer is a linear map from 8192 -> 128 with MaxEnt, i.e. essentially PCA. Optimize by minimizing
-    the loss = -variance + lambda * (W.T.dot(W) - id) for each feature pixel (i.e. W is shared).
+    Bottleneck layer is a *linear* map from 8192 -> 128 with MaxEnt, i.e. essentially PCA. Optimize by minimizing
+    the loss = -variance + lambda * (W.T.dot(W) - id) for each feature pixel (i.e. W is shared), or max knn entropy.
 
     To be used with OpenImages only for now.
+
+    TODOs:
+    - dataset create script
+    - TB logger
+    - just pred class or pred difference?
 
     """
 
@@ -53,11 +60,6 @@ class CombineOne(pl.LightningModule):
                                  channels_out=350,
                                  depth=args.segmentation_depth,
                                  out_activation=nn.Tanh())  # <-- pos/neg gt is -1, +1 or None
-        self.bbox_head = ConvHead(channels_in=128,
-                                  channels=args.segmentation_width,
-                                  channels_out=601,
-                                  depth=args.segmentation_depth,
-                                  out_activation=nn.Tanh())  # <-- pos/neg gt is -1, +1 or None
 
     def forward(self, x):
 
@@ -217,6 +219,54 @@ class CombineOne(pl.LightningModule):
         if 'v_num' in tqdm_dict:
             del tqdm_dict['v_num']
         return tqdm_dict
+
+
+class ConvHead(nn.Module):
+    """Head on top of a fully convolutional net. A fully convolutional residual net with 1x1 convs.
+
+    """
+
+    def __init__(self, channels_in=128, channels=1024, channels_out=128, depth=1, out_activation=None):
+        super().__init__()
+        out_activation = nn.Identity if out_activation is None else out_activation
+
+        self.pre_layer = ConvLayer(channels_in, channels)
+        self.res_layers = nn.ModuleList([ConvLayer(channels, channels) for _ in range(depth)])
+        self.post_layer = ConvLayer(channels, channels_out, act=out_activation)
+
+    def forward(self, x):
+        """
+        :param x: shape (B, channels, H / k, H / k) for int k
+        :return: segmap predictions of shape [B, num_classes, H / k, H / k];
+        """
+        x = self.pre_layer(x)
+        for fn in self.res_layers:
+            x = x + fn(x)
+        x = self.post_layer(x)
+
+        return x
+
+
+class ConvLayer(nn.Module):
+
+    def __init__(self, f_in, f_out, kernel_size=1, padding=0, stride=1, init_scale=1., groups=1, act=nn.ReLU()):
+        """Basic convolutional layer with ReLU, BN layers.
+
+        :param f_in:
+        :param f_out:
+        """
+        super().__init__()
+        self.f_in = f_in
+        self.f_out = f_out
+        conv = nn.Conv2d(f_in, f_out, kernel_size=kernel_size, stride=stride, padding=padding, groups=groups)
+        norm = nn.BatchNorm2d(f_out)
+        norm.bias.data.zero_()
+        norm.weight.data = init_scale * norm.weight.data
+        self.fn = nn.Sequential(conv, norm, act)
+
+    def forward(self, x):
+        x = self.fn(x)
+        return x
 
 
 class SuperModel(nn.Module):
