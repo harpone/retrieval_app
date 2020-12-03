@@ -16,7 +16,6 @@ class URLDataset(Dataset):
         """Custom PyTorch dataset for a list/array of URLs.
 
         :param url_list: list or numpy array of dtype np.string_ of `path`s where path is of form 'https://.../xyz.jpg'
-        
         :param transform:
         :param
         """
@@ -42,4 +41,3 @@ class URLDataset(Dataset):
             img = self.transform(img)
 
         return img, url, shape_orig
-
