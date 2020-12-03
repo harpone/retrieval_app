@@ -23,16 +23,17 @@ from core.config import RESIZE_TO
 from core.augs import load_augs
 from core.utils import visualize_segmentations, compute_visual_center, load_gcs_checkpoint
 from core.dataio import blob_to_path, get_dataloader
+from core.losses import compute_loss
 
 catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
 thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
 imagenet_classes = pd.read_csv('./misc/imagenet_classes.txt', header=None, index_col=[0])
 
-# TODO: check ConvHead out scale
+# TODO: OI data gen script
 # TODO: compute_loss
 # TODO: get_dataloader
-
+# TODO: check ConvHead out scale
 
 class TheEye(pl.LightningModule):
     """Model with SimCLR or other fully conv backbone, bottleneck layer and segmentation layer on top.
