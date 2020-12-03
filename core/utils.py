@@ -1,33 +1,38 @@
-import torchvision.transforms as transforms
-import torchvision.datasets as datasets
-from PIL import Image
-import numpy as np
-import uuid
-from scipy.ndimage import zoom
-import skimage
-from skimage.filters import gaussian
-from detectron2 import model_zoo
-from detectron2.engine import DefaultPredictor
-from detectron2.config import get_cfg
-from detectron2.utils.visualizer import Visualizer
-from detectron2.data import MetadataCatalog, DatasetCatalog
-import matplotlib.pyplot as plt
-from skimage.morphology import medial_axis, skeletonize
-from skimage.segmentation import find_boundaries
 import io
 import os
-import base64
 import shutil
-from google.cloud import storage
+import uuid
+from detectron2.data import MetadataCatalog
+
+import matplotlib.pyplot as plt
+import numpy as np
+import skimage
 import torch
+from detectron2 import model_zoo
+from detectron2.config import get_cfg
+from detectron2.utils.visualizer import Visualizer
+from google.cloud import storage
+from scipy.ndimage import zoom
+from skimage.filters import gaussian
+from skimage.morphology import medial_axis
 
-from core.dataio import images_from_urls
 from core.config import N_RETRIEVED_RESULTS
-
+from core.dataio import images_from_urls
 
 catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
 thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
+
+
+def nanmean(x):
+    """Uses torch.nansum to compute mean over all non-NaN values.
+
+    :param x:
+    :return:
+    """
+    norm = (~torch.isnan(x)).sum()
+    mean = torch.nansum(x) / norm
+    return mean
 
 
 def load_gcs_checkpoint(bucketname, blob_path):
@@ -64,7 +69,8 @@ def delete_plot_cache():
     try:
         shutil.rmtree('./static/cache')
         os.makedirs('./static/cache')
-    except:
+    except Exception as ex:
+        print(ex)
         pass
 
 
@@ -201,7 +207,7 @@ def get_retrieval_plot(indices, entities, debug_mode=False):
         h_center = h_centers[n]
         w_center = w_centers[n]
         pred_item = preds_item[n]
-        is_thing = is_things[n]
+        #is_thing = is_things[n]
 
         i = n // 2
         j = n % 2
