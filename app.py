@@ -1,4 +1,3 @@
-from argparse import ArgumentParser
 import numpy as np
 from flask import Flask, render_template, request, url_for, redirect, Response, flash
 from flask_uploads import UploadSet, configure_uploads, IMAGES, patch_request_class
@@ -9,7 +8,6 @@ from wtforms import SubmitField
 import os
 import cv2
 from termcolor import colored
-import PIL
 from PIL import Image
 from waitress import serve
 import ngtpy
@@ -94,7 +92,7 @@ print('READY TO FLY!')
 
 
 def get_numpy_frame():
-    ret, frame = videocap.read()  # frame [480, 640, 3] by default  # TODO: sometimes returns frame = None!
+    _, frame = videocap.read()  # frame [480, 640, 3] by default  # TODO: sometimes returns frame = None!
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     return frame
 
@@ -155,11 +153,7 @@ def upload_photo():
     global uploaded_filename
     form = UploadForm()
     if form.validate_on_submit():
-        uploaded_filename = photos.save(form.photo.data)
-        file_url = photos.url(uploaded_filename)
         return redirect(url_for('query_image'))
-    else:
-        file_url = None
     return render_template('upload.html', form=form)
 
 
@@ -196,7 +190,7 @@ def query_image():
 
         # Search for nns:
         query_results = ngtpy_index.search(img_meta['code'], N_RETRIEVED_RESULTS)
-        indices, dists = list(zip(*query_results))
+        indices, _ = list(zip(*query_results))
 
         retrieval_img_path = get_retrieval_plot(indices, entities, debug_mode=DEBUG_WITH_PREDS)
     elif uploaded_filename is not None:  # uploaded photo
