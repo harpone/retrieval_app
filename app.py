@@ -32,8 +32,6 @@ uploaded_filename = None
 """
 
 """
-# TODO: resize to max size!! Now huge inputs will go through
-# TODO: postprocessing for huge images is very slow
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
