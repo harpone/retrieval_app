@@ -15,7 +15,7 @@ from scipy.ndimage import zoom
 from joblib import load as load_joblib
 import numpy as np
 import pandas as pd
-from detectron2.data import MetadataCatalog, DatasetCatalog
+from detectron2.data import MetadataCatalog
 from munch import Munch
 
 from core.resnet_wider import resnet50x4
@@ -31,9 +31,9 @@ stuff_classes = catalog.stuff_classes
 imagenet_classes = pd.read_csv('./misc/imagenet_classes.txt', header=None, index_col=[0])
 
 # TODO: OI data gen script
-# TODO: compute_loss
 # TODO: get_dataloader
 # TODO: check ConvHead out scale
+
 
 class TheEye(pl.LightningModule):
     """Model with SimCLR or other fully conv backbone, bottleneck layer and segmentation layer on top.
@@ -235,7 +235,7 @@ class SuperModel(nn.Module):
         # cfg.MODEL.DEVICE = 'cpu'  # force CPU
         cfg.merge_from_file(model_zoo.get_config_file(cfg_fname))
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5  # set threshold for this model
-        cfg.INPUT.MIN_SIZE_TEST = RESIZE_TO  # default is 800 and is pretty slow... NOTE this should be same as in augs!!
+        cfg.INPUT.MIN_SIZE_TEST = RESIZE_TO  # default is 800 and is pretty slow... NOTE should be same as in augs!!
         # Find a model from detectron2's model zoo. You can use the https://dl.fbaipublicfiles... url as well
         cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(cfg_fname)
         self.segnet = DefaultPredictor(cfg)
@@ -246,6 +246,7 @@ class SuperModel(nn.Module):
         try:
             self.pca = load_joblib(pca_path)
         except Exception as e:
+            print(e)  # TODO: catch and use
             print(colored('Local pca checkpoint not found... downloading from GCS.', 'red'))
             if not os.path.exists('/home/heka/model_data/'):
                 os.makedirs('/home/heka/model_data/', exist_ok=True)

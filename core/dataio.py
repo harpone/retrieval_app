@@ -6,11 +6,16 @@ import os
 import cv2
 from os.path import join
 from google.cloud import storage
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool
 from termcolor import colored
 import time
 
 from core.config import CODE_LENGTH
+
+
+def get_dataloader(args, phase='train'):
+    # TODO
+    return
 
 
 def blob_to_path(bucketname, blob_path=None, local_path=None):
@@ -31,7 +36,7 @@ def capture_webcam():
     if not video_capture.isOpened():
         raise Exception("Could not open video device")
 
-    ret, frame = video_capture.read()  # Read picture. ret === True on success
+    _, frame = video_capture.read()  # Read picture. ret === True on success
 
     # Close device
     video_capture.release()
