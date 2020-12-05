@@ -3,7 +3,6 @@ from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
 import matplotlib.pyplot as plt
 from termcolor import colored
-from google.cloud import storage
 import os
 import time
 import pytorch_lightning as pl
@@ -30,8 +29,6 @@ thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
 imagenet_classes = pd.read_csv('./misc/imagenet_classes.txt', header=None, index_col=[0])
 
-# TODO: OI data gen script
-# TODO: get_dataloader
 # TODO: check ConvHead out scale
 
 
