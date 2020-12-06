@@ -12,7 +12,8 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
-from core.utils import image_from_url
+import core.dataio as dataio
+import core.utils as utils
 
 """
 - about 10 examples/ s for single process => 1000 ex/s for 100 processes => about 30 min total
@@ -42,9 +43,9 @@ def write_tar(pid,
         if IMAGE_SIZE != 'o':  # instead use lower res image
             url = url.replace('_o.jpg', f'_{IMAGE_SIZE}.jpg')
         counter += 1
-        print(f'\r{counter}', end='')
+        print(f'\r{counter}', end='')  # TODO: can get crowded...
 
-        img = image_from_url(url)  # TODO: retrying if timeouts etc
+        img = dataio.image_from_url(url)  # TODO: retrying if timeouts etc
         if img is None:
             continue
         # img_bytes = img.tobytes()
@@ -121,13 +122,15 @@ if __name__ == '__main__':
     l: 1024
     """
 
-    PATH_ROOT = '/mnt/disks/datasets/openimages'
+    #PATH_ROOT = '/mnt/disks/datasets/openimages'
+    PATH_ROOT = '/media/heka/TERA/Data/openimages'
     USE_ORIGINAL_SIZE = True  # TODO: False when real thing maybe
     num_samples_per_tarfile = 3000
     SEG_CLASSES_URL = 'https://storage.googleapis.com/openimages/v5/classes-segmentation.txt'
     IMAGE_SIZE = 'l'
 
     if 1:  # openimages validation set
+        # Note: getting only 24730 masks. but that's correct
         print('Creating validation set tars.')
         MASKS_PATH = join(PATH_ROOT, 'val/masks')
         IMGS_URL = 'https://storage.googleapis.com/openimages/2018_04/validation/validation-images-with-rotation.csv'
@@ -135,7 +138,7 @@ if __name__ == '__main__':
         LABELS_URL = 'https://storage.googleapis.com/openimages/v5/validation-annotations-human-imagelabels-boxable.csv'
         BBOXES_URL = 'https://storage.googleapis.com/openimages/v5/validation-annotations-bbox.csv'
         RELATIONS_URL = 'https://storage.googleapis.com/openimages/v6/oidv6-validation-annotations-vrd.csv'
-        TAR_BASENAME = f'val-wds/openimages-{IMAGE_SIZE}-val-TEST'
+        TAR_BASENAME = f'val/openimages-{IMAGE_SIZE}-val'
 
     elif 0:  # training set
         print('Creating training set tars.')
@@ -145,7 +148,7 @@ if __name__ == '__main__':
         LABELS_URL = 'https://storage.googleapis.com/openimages/v5/train-annotations-human-imagelabels-boxable.csv'
         BBOXES_URL = 'https://storage.googleapis.com/openimages/v6/oidv6-train-annotations-bbox.csv'
         RELATIONS_URL = 'https://storage.googleapis.com/openimages/v6/oidv6-train-annotations-vrd.csv'
-        TAR_BASENAME = f'train-wds/openimages-{IMAGE_SIZE}-train'
+        TAR_BASENAME = f'train/openimages-{IMAGE_SIZE}-train'
 
     else:  # test set
         print('Creating test set tars.')
@@ -155,7 +158,7 @@ if __name__ == '__main__':
         LABELS_URL = 'https://storage.googleapis.com/openimages/v5/test-annotations-human-imagelabels-boxable.csv'
         BBOXES_URL = 'https://storage.googleapis.com/openimages/v5/test-annotations-bbox.csv'
         RELATIONS_URL = 'https://storage.googleapis.com/openimages/v6/oidv6-test-annotations-vrd.csv'
-        TAR_BASENAME = f'test-wds/openimages-{IMAGE_SIZE}-test'
+        TAR_BASENAME = f'test/openimages-{IMAGE_SIZE}-test'
 
     print('Loading metadata from URL:')
     image_meta = pd.read_csv(IMGS_URL)

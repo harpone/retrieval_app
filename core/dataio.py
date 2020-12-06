@@ -23,7 +23,7 @@ from webdataset.filters import batched, shuffle
 
 
 from core.config import CODE_LENGTH
-from core.utils import NumpyRNG
+import core.utils as utils
 
 
 def authenticate_gcs_urls(url):
@@ -401,6 +401,10 @@ def collate_openimages(batch):
     return dict(images=imgs, targets=targets)
 
 
+def worker_init_fn(worker_id):
+    np.random.seed(np.random.get_state()[1][0] + worker_id)
+
+
 def get_dataloader(args, phase="train", method='gsutil'):
     if phase == "train":
         transform = alb.Compose(
@@ -477,7 +481,7 @@ def get_dataloader(args, phase="train", method='gsutil'):
         # .pipe(none_filter)
         .pipe(decode_openimages)
         .pipe(augment)  # still in image, mask, target format; bboxes are numpy vectors
-        .pipe(shuffle(shuffle_buffer, initial=100, rng=NumpyRNG()))
+        .pipe(shuffle(shuffle_buffer, initial=100, rng=utils.NumpyRNG()))
         .pipe(
             batched(
                 batchsize=args.batch_size,
