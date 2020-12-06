@@ -16,7 +16,7 @@ SPEED ISSUE:
 """
 # TODO: warning shuffle disabled
 
-# TODO: /opt/conda/lib/python3.7/site-packages/webdataset/dataset.py:56: UserWarning: ReadError('unexpected end of data')
+# TODO: site-packages/webdataset/dataset.py:56: UserWarning: ReadError('unexpected end of data')
 
 # TODO: check that shuffle is really random, i.e. entire dataset seen
 # TODO: warning: reload_dataloaders_every_epoch=False!!!
@@ -44,7 +44,7 @@ precision = 32
 
 if 0:  # LARS
     optimizer_name = 'lars'  # 'sgd', 'adam', 'lars' or 'lamb'
-    warmup_peak = 1500000 / (batch_size * (tpu_cores or gpus))  #  peak at about 9 epochs with this; ~SimCLR with LARS
+    warmup_peak = 1500000 / (batch_size * gpus)  # peak at about 9 epochs with this; ~SimCLR with LARS
     base_lr = 0.075  # default for LARS SimCLR v1 at B_total=64
 if 1:  # LAMB
     optimizer_name = 'lamb'  # 'sgd', 'adam', 'lars' or 'lamb'

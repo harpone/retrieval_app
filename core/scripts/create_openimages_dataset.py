@@ -130,8 +130,8 @@ if __name__ == '__main__':
     if 1:  # openimages validation set
         print('Creating validation set tars.')
         MASKS_PATH = join(PATH_ROOT, 'val/masks')
-        IMAGE_META_URL = 'https://storage.googleapis.com/openimages/2018_04/validation/validation-images-with-rotation.csv'
-        MASK_META_URL = 'https://storage.googleapis.com/openimages/v5/validation-annotations-object-segmentation.csv'
+        IMGS_URL = 'https://storage.googleapis.com/openimages/2018_04/validation/validation-images-with-rotation.csv'
+        MASKS_URL = 'https://storage.googleapis.com/openimages/v5/validation-annotations-object-segmentation.csv'
         LABELS_URL = 'https://storage.googleapis.com/openimages/v5/validation-annotations-human-imagelabels-boxable.csv'
         BBOXES_URL = 'https://storage.googleapis.com/openimages/v5/validation-annotations-bbox.csv'
         RELATIONS_URL = 'https://storage.googleapis.com/openimages/v6/oidv6-validation-annotations-vrd.csv'
@@ -140,8 +140,8 @@ if __name__ == '__main__':
     elif 0:  # training set
         print('Creating training set tars.')
         MASKS_PATH = join(PATH_ROOT, 'train/masks')
-        IMAGE_META_URL = 'https://storage.googleapis.com/openimages/2018_04/train/train-images-boxable-with-rotation.csv'
-        MASK_META_URL = 'https://storage.googleapis.com/openimages/v5/train-annotations-object-segmentation.csv'
+        IMGS_URL = 'https://storage.googleapis.com/openimages/2018_04/train/train-images-boxable-with-rotation.csv'
+        MASKS_URL = 'https://storage.googleapis.com/openimages/v5/train-annotations-object-segmentation.csv'
         LABELS_URL = 'https://storage.googleapis.com/openimages/v5/train-annotations-human-imagelabels-boxable.csv'
         BBOXES_URL = 'https://storage.googleapis.com/openimages/v6/oidv6-train-annotations-bbox.csv'
         RELATIONS_URL = 'https://storage.googleapis.com/openimages/v6/oidv6-train-annotations-vrd.csv'
@@ -150,15 +150,15 @@ if __name__ == '__main__':
     else:  # test set
         print('Creating test set tars.')
         MASKS_PATH = join(PATH_ROOT, 'test/masks')
-        IMAGE_META_URL = 'https://storage.googleapis.com/openimages/2018_04/test/test-images-with-rotation.csv'
-        MASK_META_URL = 'https://storage.googleapis.com/openimages/v5/test-annotations-object-segmentation.csv'
+        IMGS_URL = 'https://storage.googleapis.com/openimages/2018_04/test/test-images-with-rotation.csv'
+        MASKS_URL = 'https://storage.googleapis.com/openimages/v5/test-annotations-object-segmentation.csv'
         LABELS_URL = 'https://storage.googleapis.com/openimages/v5/test-annotations-human-imagelabels-boxable.csv'
         BBOXES_URL = 'https://storage.googleapis.com/openimages/v5/test-annotations-bbox.csv'
         RELATIONS_URL = 'https://storage.googleapis.com/openimages/v6/oidv6-test-annotations-vrd.csv'
         TAR_BASENAME = f'test-wds/openimages-{IMAGE_SIZE}-test'
 
     print('Loading metadata from URL:')
-    image_meta = pd.read_csv(IMAGE_META_URL)
+    image_meta = pd.read_csv(IMGS_URL)
     image_meta = image_meta[['ImageID', 'OriginalURL']]
     image_meta = image_meta.sample(frac=1).reset_index(drop=True)  # shuffle now so no need to shuffle later
 
@@ -169,7 +169,7 @@ if __name__ == '__main__':
     image_meta_split = np.array_split(image_meta, num_tar_files)
 
     # Split all dataframes according to image id split:
-    df_masks = pd.read_csv(MASK_META_URL)
+    df_masks = pd.read_csv(MASKS_URL)
     df_labels = pd.read_csv(LABELS_URL)
     df_bboxes = pd.read_csv(BBOXES_URL)
     df_relations = pd.read_csv(RELATIONS_URL)
