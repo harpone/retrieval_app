@@ -24,6 +24,25 @@ thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
 
 
+class NumpyRNG:
+    def __init__(self, seed=None):
+        self.rng = np.random.default_rng(seed=seed)
+
+    def shuffle(self, lst):
+        lst = self.rng.shuffle(lst)
+        return lst
+
+    def randint(self, low, high):
+        if high > low:
+            rnd_int = self.rng.integers(low, high)
+        else:
+            rnd_int = 0
+        return rnd_int
+
+    def seed(self, seed_value):
+        self.rng = np.random.default_rng(int(seed_value * 1e+8))
+
+
 def nanmean(x):
     """Uses torch.nansum to compute mean over all non-NaN values.
 
