@@ -26,6 +26,39 @@ from core.config import CODE_LENGTH
 import core.utils as utils
 
 
+def collate_openimages(batch):
+    """Packs `imgs` and `masks` to a minibatch tensor.
+    :param batch: list of (image, target)
+    :return:
+    """
+    # Unpack if lists:
+    imgs = list()
+    masks = list()
+    masks_bbox = list()
+    targets = collections.defaultdict(list)
+
+    keys_used = ['LabelVec']  # has pos (+1), neg (-1) or not present (NaN) labels
+
+    for image, target in batch:
+        if image is None or target is None:  # maybe there was a read error/ corrupt example so skip
+            continue
+        imgs.append(torch.as_tensor(image, dtype=torch.float32))
+        masks.append(torch.as_tensor(target['mask'], dtype=torch.float32))
+        masks_bbox.append(torch.as_tensor(target['mask_bbox'], dtype=torch.float32))
+        [targets[key].append(torch.as_tensor(target[key], dtype=torch.float32)) for key in keys_used]
+
+    imgs = torch.stack(imgs, dim=0)
+    masks = torch.stack(masks, dim=0)
+    masks_bbox = torch.stack(masks_bbox, dim=0)
+    targets['masks'] = masks
+    targets['masks_bbox'] = masks_bbox
+
+    for key in keys_used:
+        targets[key] = torch.stack(targets[key], dim=0)
+
+    return dict(images=imgs, targets=targets)
+
+
 def read_csv_url(url, cache=True):
     return
 
@@ -70,7 +103,7 @@ def replace_gcs_endpoint(url):
 
 
 class TransformOpenImages:
-    def __init__(self) -> None:
+    def __init__(self, aug=None):
         super().__init__()
         # TODO: maybe cache or url/uri/path as kwarg
         bbox_class_names_url = "https://storage.googleapis.com/openimages/v5/class-descriptions-boxable.csv"
@@ -89,8 +122,9 @@ class TransformOpenImages:
         self.name2idx_seg = {val: key for key, val in self.idx2name_seg.items()}
         self.num_classes_bbox = len(self.idx2name_bbox)
         self.num_classes_seg = len(class_names_seg[0])
+        self.aug = aug
 
-    def __call__(self, src, aug=None):
+    def __call__(self, src):
         """Apply Albumentations transformations to `image`, `mask` and bboxes in `target`.
         Bounding boxes are also transformed to numpy array vectors.
 
@@ -100,8 +134,10 @@ class TransformOpenImages:
         :param src:
         :return:
         """
+        # decode:
+        src = self.decode_openimages(src)
         for image, mask, target in src:
-            if aug:
+            if self.aug:
                 # Gather bboxes as list of [x_min, y_min, x_max, y_max], relative coords:
                 x_mins = target.get("XMin", [])
                 y_mins = target.get("YMin", [])
@@ -131,9 +167,7 @@ class TransformOpenImages:
                 labels_2 = target["LabelName2"]
                 bbox_labels = labels_bbox + labels_1 + labels_2
 
-                augmented = aug(
-                    image=image, mask=mask, bboxes=bboxes, bbox_labels=bbox_labels
-                )
+                augmented = self.aug(image=image, mask=mask, bboxes=bboxes, bbox_labels=bbox_labels)
                 image = augmented["image"]
                 mask = augmented["mask"]
                 bboxes = augmented["bboxes"]
@@ -218,6 +252,42 @@ class TransformOpenImages:
                 target["mask_bbox"] = mask_bbox  # [num_classes, H, W], float valued
 
             yield image, target
+
+    @staticmethod
+    def decode_openimages(src):
+        """Decode openimages data in the form of (image.jpg, mask.png, target.json) to
+        (uint8 numpy array of shape [H, W, C], uint8 numpy array of shape [H, W], dict) respectively.
+
+        Decode to uint8 numpy arrays because that's what albumentations works with.
+
+        :param src:
+        :return img, mask, target: img: uint8 ndarray shape [H, W, 3]; mask: int32 ndarray shape [H, W]; target: dict
+        """
+        # TODO: maybe replace PIL.Image.open with libjpg-turbo? Or pytorch native open?
+        for sample in src:
+            try:
+                img = sample['image.jpg']
+                mask = sample['mask.png']
+                target = sample['targets.json']
+            except KeyError:  # not found
+                continue
+            with io.BytesIO(img) as stream:
+                img = Image.open(stream)
+                #img.load()
+                img = np.array(img.convert('RGB'))
+
+            with io.BytesIO(mask) as stream:
+                mask = Image.open(stream)
+                #mask.load()
+                mask = np.array(mask)
+
+            target = json.loads(target)
+
+            # Filter nones now that all are loaded:
+            if (img is None) or (mask is None) or (target is None):
+                continue
+
+            yield img, mask, target
 
     def get_openimages_segmask(self, mask, negative_labels_):
         """Get positives/ negatives segmentation mask by using global negative labels.
