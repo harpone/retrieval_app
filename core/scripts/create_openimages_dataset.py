@@ -39,6 +39,7 @@ def write_tar(pid,
     tar_name = TAR_BASENAME + f'-{pid}.tar'
     sink = wds.TarWriter(join(PATH_ROOT, tar_name), encoder=True)
     counter = 0
+    counter_notfound = 0
     for _, (img_id, url) in image_meta_pid.iterrows():
         if IMAGE_SIZE != 'o':  # instead use lower res image
             url = url.replace('_o.jpg', f'_{IMAGE_SIZE}.jpg')
@@ -47,7 +48,9 @@ def write_tar(pid,
 
         img = dataio.image_from_url(url)  # TODO: retrying if timeouts etc
         if img is None:
+            counter_notfound += 1
             continue
+        img.load()
         # img_bytes = img.tobytes()
 
         # Load masks and process:
@@ -94,6 +97,7 @@ def write_tar(pid,
         #     break  # testing
 
     sink.close()
+    print(f'pid={pid}: not found={counter_notfound}')
 
 
 def combine_masks(df_masks_, cls2idx, img):
@@ -118,8 +122,8 @@ if __name__ == '__main__':
     NOTE: flickr image sizes (longer side)
     o: original
     z: 640
-    c: 800
-    l: 1024
+    c: 800  # AOK
+    l: 1024  # not working!
     """
 
     #PATH_ROOT = '/mnt/disks/datasets/openimages'
@@ -127,7 +131,7 @@ if __name__ == '__main__':
     USE_ORIGINAL_SIZE = True  # TODO: False when real thing maybe
     num_samples_per_tarfile = 3000
     SEG_CLASSES_URL = 'https://storage.googleapis.com/openimages/v5/classes-segmentation.txt'
-    IMAGE_SIZE = 'l'
+    IMAGE_SIZE = 'z'
 
     if 1:  # openimages validation set
         # Note: getting only 24730 masks. but that's correct
@@ -161,22 +165,22 @@ if __name__ == '__main__':
         TAR_BASENAME = f'test/openimages-{IMAGE_SIZE}-test'
 
     print('Loading metadata from URL:')
+    df_masks = pd.read_csv(MASKS_URL)
+    df_labels = pd.read_csv(LABELS_URL)
+    df_bboxes = pd.read_csv(BBOXES_URL)
+    df_relations = pd.read_csv(RELATIONS_URL)
     image_meta = pd.read_csv(IMGS_URL)
     image_meta = image_meta[['ImageID', 'OriginalURL']]
     image_meta = image_meta.sample(frac=1).reset_index(drop=True)  # shuffle now so no need to shuffle later
 
     # Split paths for each process:
     num_tar_files = int(len(image_meta) / num_samples_per_tarfile)
+    num_tar_files = 1  # TODO: debugging and testing!
     #num_tar_files = 2  # 580 is way too many for the training set... need to rearrange later
     print(f'Splitting data into {num_tar_files} tar archives:')
     image_meta_split = np.array_split(image_meta, num_tar_files)
 
     # Split all dataframes according to image id split:
-    df_masks = pd.read_csv(MASKS_URL)
-    df_labels = pd.read_csv(LABELS_URL)
-    df_bboxes = pd.read_csv(BBOXES_URL)
-    df_relations = pd.read_csv(RELATIONS_URL)
-
     if 1:  # multiprocess
         processes = []
         for pid, image_meta_pid in enumerate(image_meta_split):

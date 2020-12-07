@@ -26,6 +26,10 @@ from core.config import CODE_LENGTH
 import core.utils as utils
 
 
+def read_csv_url(url, cache=True):
+    return
+
+
 def authenticate_gcs_urls(url):
     """Adds authentication string to an `url`. `url` can be in brace form.
 
