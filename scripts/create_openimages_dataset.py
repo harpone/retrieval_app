@@ -92,9 +92,9 @@ def write_tar(pid,
         sink.write(sample)
 
         # TODO: for debugging
-        if counter % 100 == 0:
-            print(f'\r{counter}', end='')
-            break  # testing
+        # if counter % 100 == 0:
+        #     print(f'\r{counter}', end='')
+        #     break  # testing
 
     sink.close()
     print()
