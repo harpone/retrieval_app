@@ -3,11 +3,14 @@ import os
 import shutil
 import uuid
 from detectron2.data import MetadataCatalog
-
+import blosc
+from turbojpeg import TurboJPEG
+import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import skimage
 import torch
+import PIL
 from detectron2 import model_zoo
 from detectron2.config import get_cfg
 from detectron2.utils.visualizer import Visualizer
@@ -17,11 +20,81 @@ from skimage.filters import gaussian
 from skimage.morphology import medial_axis
 
 from core.config import N_RETRIEVED_RESULTS
-from core.dataio import images_from_urls
+import core.dataio as dataio
 
 catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
 thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
+jpeg = TurboJPEG()  # TODO: refactor once confirmed working
+
+
+def image_bytes_from_url(url):
+    """Load image from `url`
+
+    :param url: str
+    :return: bytes
+    """
+    r = requests.get(url, stream=True)
+    if r.status_code == 200:  # AOK
+        r.raw.decode_content = True
+        img_bytes = r.raw.read()
+    else:  # TODO: maybe retry logic here?
+        img_bytes = None
+
+    return img_bytes
+
+
+def compress_to_bytes(arr):
+    """Compresses a numpy array `arr` by using blosc and returns bytes. Inverse operation to `decompress_from_bytes`.
+
+    :param arr: numpy.ndarray
+    :return: byte string
+    """
+    compressed_arr = blosc.compress_ptr(arr.__array_interface__['data'][0],
+                                        arr.size,
+                                        arr.dtype.itemsize,
+                                        clevel=3,
+                                        cname='zstd',
+                                        shuffle=blosc.SHUFFLE)
+    arr_bytes = pickle.dumps((arr.shape, arr.dtype, compressed_arr))
+    return arr_bytes
+
+
+def decompress_from_bytes(arr_bytes):
+    """Decompresses `arr_bytes` compressed by `compress_to_bytes` and returns a numpy array.
+
+    :param arr_bytes:
+    :return:
+    """
+    shape, dtype, compressed_arr = pickle.loads(arr_bytes)
+    arr = np.empty(shape, dtype)
+    blosc.decompress_ptr(compressed_arr, arr.__array_interface__['data'][0])
+
+    return arr
+
+
+def turbodecoder(img_bytes):
+    """libjpeg-turbo based decoder for JPEG image bytes.
+
+    :param img_bytes: e.g. open(pth_img, 'rb').read() or from `image_bytes_from_url()`
+    :return: numpy uint8 array, RGB
+    """
+    bgr_array = jpeg.decode(img_bytes)
+    return bgr_array[:, :, ::-1]  # RGB
+
+
+def pildecoder(img_bytes, to_rgb=True):
+    """Standard PIL based decoder for JPEG bytes.
+
+    :param img_bytes:
+    :param to_rgb:
+    :return: numpy uint8 array, RGB
+    """
+    with io.BytesIO(img_bytes) as stream:
+        img = PIL.Image.open(stream)
+        img.load()  # Image.open is lazy so need this for benchmarks!
+        img = np.array(img.convert('RGB')) if to_rgb else np.array(img)
+    return img
 
 
 class NumpyRNG:
@@ -215,7 +288,7 @@ def get_retrieval_plot(indices, entities, debug_mode=False):
         urls.append(str(entity['url'], encoding='utf-8'))
         preds_item.append(entity['pred'])
         is_things.append(entity['is_thing'])
-    images_ret = images_from_urls(urls)
+    images_ret = dataio.images_from_urls(urls)
 
     # 2) form 2 col, 3 row matplotlib plot with h_center, w_center scatter
     fig, ax = plt.subplots(N_RETRIEVED_RESULTS // 2, 2, figsize=(13, 13))

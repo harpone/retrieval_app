@@ -30,6 +30,15 @@ stuff_classes = catalog.stuff_classes
 imagenet_classes = pd.read_csv('./misc/imagenet_classes.txt', header=None, index_col=[0])
 
 # TODO: check ConvHead out scale
+"""
+Fuck batch inference can be pretty complicated... requires padding to same shape => inefficiencies, then
+split to multiprocess and generate codes. Maybe instead do all CPU inference but
+1) use torchscript
+2) quantize?
+3) export to ONNX
+
+NOTE: CPU inference - .to('cpu:0') ?? damn didn't do this!!
+"""
 
 
 class TheEye(pl.LightningModule):
@@ -70,19 +79,27 @@ class TheEye(pl.LightningModule):
         class_preds, features = self.backbone(images)  # carrying class_pred for sanity checks
         codes = self.bottleneck(features)
 
-        seg_preds = self.seg_head(codes.detach())  # codes will be trained with PCA/MaxEnt loss
+        seg_preds = self.seg_head(codes.detach())  # codes will be trained with PCA/MaxEnt loss, seg_preds with seg loss
 
         return codes, seg_preds, class_preds
 
-    def codify(self, images):
-        """Takes in an image tensor x, obtains codes, seg_pred and uses the predicted segmentations to generate
+    def codify(self, urls, num_workers=1):
+        """Consumes a list of image urls, constructs a corresponding URLDataset and dataloader and runs inference
+        over all of the examples.
+        Obtains codes, seg_pred and uses the predicted segmentations to generate
         a code per detected item. Outputs also the segmentation and possibly other info.
 
-        :param images: torch.tensor shape [B, C, H, W]
+        # TODO: use torchscript to speed up!
+        # TODO: what output? dict per image
+        # TODO: refactor get_dataloader to consume `urls` and use self.args and phase='encode'
+        # => webdataset... how about URLDataset? Maybe 'encode' phase instead gives URLDataset...
+        # TODO: refactor get_dataloader to also consume `transforms` and def train, val, infer transforms in __init__
+
+        :param urls: local file paths or urls
         :return:
         """
+
         codes, seg_preds, class_preds = self(images)
-        # TODO
 
     def training_step(self, batch, batch_idx):
 
