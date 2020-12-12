@@ -11,6 +11,7 @@ import numpy as np
 import skimage
 import torch
 import PIL
+import requests
 from detectron2 import model_zoo
 from detectron2.config import get_cfg
 from detectron2.utils.visualizer import Visualizer
@@ -321,6 +322,89 @@ def get_retrieval_plot(indices, entities, debug_mode=False):
     retrieval_img_path = retrieval_img_path[2:]
 
     return retrieval_img_path
+
+
+def visualize_openimages(images, targets, heads_out, num_figs=1):
+    """
+
+    :param images: torch.tensor shape [B, C, H, W] in [0, 1]
+    :param targets:
+    :param heads_out:
+    :return:
+    """
+    # just take the first example for now:
+    figs = list()
+    for i in range(num_figs):
+        image = images[i].permute(1, 2, 0).cpu().numpy()
+        mask_seg_gt = targets['masks'][i].cpu().numpy()  # [n_classes_seg, H_out, W_out]
+        mask_bbox_gt = targets['masks_bbox'][i].cpu().numpy()  # [n_classes_bbox, H_out, W_out]
+        #labels = targets['LabelVec'][0].cpu().numpy()
+        #labels = labels[~np.isnan(labels)]
+
+        # Collect non NaNs:
+        mask_seg_isnan = np.isnan(mask_seg_gt.sum(-1).sum(-1))
+        mask_seg_notnan = mask_seg_gt[~mask_seg_isnan]
+        mask_seg_pos = mask_seg_notnan[mask_seg_notnan.mean(-1).mean(-1) > -1]  # [num_pos_seg, H_out, W_out]
+        mask_seg_idx = np.arange(350)[~mask_seg_isnan]
+
+        mask_bb_isnan = np.isnan(mask_bbox_gt.sum(-1).sum(-1))
+        mask_bb_notnan = mask_bbox_gt[~mask_bb_isnan]
+        mask_bb_pos = mask_bb_notnan[mask_bb_notnan.mean(-1).mean(-1) > -1]  # [num_pos_bb, H_out, W_out]
+        mask_bb_idx = np.arange(601)[~mask_bb_isnan]
+
+        # Plot figure
+        fig, ax = plt.subplots(2, 2, figsize=(10, 10))
+        ax[0, 0].set_axis_off()
+        ax[0, 1].set_axis_off()
+        ax[1, 0].set_axis_off()
+        ax[1, 1].set_axis_off()
+
+        ax[0, 0].set_title('GT seg')
+        ax[0, 0].imshow(image)
+        for seg_mask in mask_seg_pos:
+            seg_mask = zoom(seg_mask, [32, 32], order=0)
+            seg_mask[seg_mask < 0] = np.nan  # making transparent
+            ax[0, 0].imshow(seg_mask, alpha=0.5)
+
+        # Show most "confident" prediction:
+        ax[0, 1].set_title('PRED seg')
+        ax[0, 1].imshow(image)
+        seg_preds = heads_out['segmentation_head'][i].cpu().numpy().astype(np.float32)  # [n_seg_classes, H_out, W_out]
+        seg_preds = np.argmax(seg_preds, axis=0)
+        ax[0, 1].imshow(seg_preds, alpha=0.5, cmap='RdYlGn')
+        # for idx in mask_seg_idx:  # Not a good idea because often no gt seg mask...
+        #     seg_pred = seg_preds[idx]  # [H_out, W_out]
+        #     seg_pred = (seg_pred + 1) / 2  # because in [-1, 1]
+        #     seg_pred = zoom(seg_pred, [32, 32], order=0)
+        #     ax[0, 1].imshow(seg_pred, alpha=0.5, cmap='RdYlGn')
+
+        ax[1, 0].set_title('GT bb')
+        ax[1, 0].imshow(image)
+        for bb_mask in mask_bb_pos:
+            rows = np.any(bb_mask > 0, axis=1)
+            cols = np.any(bb_mask > 0, axis=0)
+            rmin, rmax = np.where(rows)[0][[0, -1]]
+            cmin, cmax = np.where(cols)[0][[0, -1]]
+            rmin = (rmin - 0.5) * 32
+            rmax = (rmax + 0.5) * 32
+            cmin = (cmin - 0.5) * 32
+            cmax = (cmax + 0.5) * 32
+            rect = patches.Rectangle((cmin, rmin), cmax - cmin, rmax - rmin, linewidth=1, edgecolor='r', facecolor='none')
+            # Add the patch to the Axes
+            ax[1, 0].add_patch(rect)
+
+        ax[1, 1].set_title('PRED bb')
+        ax[1, 1].imshow(image)
+        bb_preds = heads_out['fcos_head'][i].cpu().numpy().astype(np.float32)  # [n_bb_classes, H_out, W_out]
+        for idx in mask_bb_idx:
+            bb_pred = bb_preds[idx]  # [H_out, W_out]
+            bb_pred = (bb_pred + 1) / 2  # because in [-1, 1]
+            bb_pred = zoom(bb_pred, [32, 32], order=0)
+            ax[1, 1].imshow(bb_pred, alpha=0.5, cmap='RdYlGn')
+
+        figs.append(fig)
+
+    return figs
 
 
 def visualize_segmentations(img, seg, seg_info):
