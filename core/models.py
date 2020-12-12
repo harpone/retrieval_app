@@ -99,7 +99,7 @@ class TheEye(pl.LightningModule):
         :return:
         """
 
-        codes, seg_preds, class_preds = self(images)
+        #codes, seg_preds, class_preds = self(images)
 
     def training_step(self, batch, batch_idx):
 
