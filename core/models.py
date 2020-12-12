@@ -20,7 +20,7 @@ from munch import Munch
 from core.resnet_wider import resnet50x4
 from core.config import RESIZE_TO
 from core.augs import load_augs
-from core.utils import visualize_segmentations, compute_visual_center, load_gcs_checkpoint
+from core.utils import visualize_openimages, compute_visual_center
 from core.dataio import blob_to_path, get_dataloader
 from core.losses import compute_loss
 
@@ -130,6 +130,11 @@ class TheEye(pl.LightningModule):
         self.log('loss_val', loss_val, sync_dist=True)
         for key, val in metrics_trn.items():
             self.log(key + '_val', val, sync_dist=True, on_epoch=False)
+
+        # Log seg, bbox regression visualization:
+        figs = visualize_openimages(images, targets, seg_preds, num_figs=self.args.num_validation_visualizations)
+        for n, fig in enumerate(figs):
+            self.logger.experiment.add_figure(f'openimages_vis_{n}', fig, global_step=self.trainer.global_step)
 
         return loss_val
 
