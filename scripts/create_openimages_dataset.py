@@ -10,8 +10,7 @@ from multiprocessing import Process
 
 import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-
+sys.path.append(os.getcwd())
 import core.utils as utils
 
 """
@@ -19,7 +18,6 @@ import core.utils as utils
 - about 33 MB for 100 examples => about 561 GB total (if original size)
 - assumes masks are in a specific local folder - all other data (incl. images) pulled from online
 """
-# TODO: getting UserWarning: ReadError('unexpected end of data') and Empty File etc so double check data consistency
 
 
 def write_tar(pid,
@@ -143,7 +141,7 @@ if __name__ == '__main__':
         BBOXES_URL = 'https://storage.googleapis.com/openimages/v5/validation-annotations-bbox.csv'
         RELATIONS_URL = 'https://storage.googleapis.com/openimages/v6/oidv6-validation-annotations-vrd.csv'
         TAR_BASENAME = f'val/openimages-{IMAGE_SIZE}-val'
-        num_tar_files = 32
+        num_tar_files = 1
 
     elif 0:  # training set
         print('Creating training set tars.')
