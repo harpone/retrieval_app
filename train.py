@@ -41,7 +41,6 @@ def main(args):
                       gradient_clip_val=0,
                       gpus=args.gpus,
                       auto_select_gpus=False,  # True will assume gpus present...
-                      tpu_cores=args.tpu_cores,
                       log_gpu_memory=None,
                       progress_bar_refresh_rate=1,
                       overfit_batches=0.,
@@ -63,8 +62,7 @@ def main(args):
                       reload_dataloaders_every_epoch=False,
                       terminate_on_nan=False,  # do NOT use on TPUs, veeeery slow!!
                       prepare_data_per_node=True,
-                      amp_backend='native',
-                      profiler=args.profiler)
+                      amp_backend='native')
     trainer.logger.log_hyperparams(args)
     trainer.fit(model)
 

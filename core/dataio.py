@@ -415,64 +415,34 @@ def decode_openimages(src):
     :param src:
     :return img, mask, target: img: uint8 ndarray shape [H, W, 3]; mask: int32 ndarray shape [H, W]; target: dict
     """
-
     for sample in src:
         try:
-            img = sample['image.jpg']
-            mask = sample['mask.png']
-            target = sample['targets.json']
-        except KeyError:  # not found
+            img_bytes = sample['image.jpg']  # still bytes
+            mask_bytes = sample['mask.png']  # still bytes
+            target_bytes = sample['targets.json']  # still bytes
+        except KeyError:  # not found  # TODO: maybe catch & log
             continue
-        with io.BytesIO(img) as stream:
-            img = Image.open(stream)
-            img.load()
-            img = np.array(img.convert('RGB'))
+        try:
+            img = utils.turbodecoder(img_bytes)
+        except OSError:  # "Unsupported color conversion request"?
+            img = utils.pildecoder(img_bytes)
+        mask = utils.decompress_from_bytes(mask_bytes).astype(np.int16)  # alb can't handle uint16
+        target = json.loads(target_bytes)
 
-        with io.BytesIO(mask) as stream:
-            mask = Image.open(stream)
-            mask.load()
-            mask = np.array(mask)
+        # add __key__ (good for debugging):
+        target['__key__'] = sample['__key__']
 
-        target = json.loads(target)
+        #if target['__key__'] == 'c96be80d96718e10':  # TODO: debugging
+        #    print()
+
+        if len(target['LabelNameImage']) == 0:  # discard no labels for now
+            continue
 
         # Filter nones now that all are loaded:
         if (img is None) or (mask is None) or (target is None):
             continue
 
         yield img, mask, target
-
-
-def collate_openimages(batch):
-    """Packs `imgs` and `masks` to a minibatch tensor.
-    :param batch: list of (image, target)
-    :return:
-    """
-    # Unpack if lists:
-    imgs = list()
-    masks = list()
-    masks_bbox = list()
-    targets = collections.defaultdict(list)
-
-    keys_used = ['LabelVec']  # has pos (+1), neg (-1) or not present (NaN) labels
-
-    for image, target in batch:
-        if image is None or target is None:  # maybe there was a read error/ corrupt example so skip
-            continue
-        imgs.append(torch.as_tensor(image, dtype=torch.float32))
-        masks.append(torch.as_tensor(target['mask'], dtype=torch.float32))
-        masks_bbox.append(torch.as_tensor(target['mask_bbox'], dtype=torch.float32))
-        [targets[key].append(torch.as_tensor(target[key], dtype=torch.float32)) for key in keys_used]
-
-    imgs = torch.stack(imgs, dim=0)
-    masks = torch.stack(masks, dim=0)
-    masks_bbox = torch.stack(masks_bbox, dim=0)
-    targets['masks'] = masks
-    targets['masks_bbox'] = masks_bbox
-
-    for key in keys_used:
-        targets[key] = torch.stack(targets[key], dim=0)
-
-    return dict(images=imgs, targets=targets)
 
 
 def worker_init_fn(worker_id):
@@ -503,7 +473,7 @@ def get_dataloader(args, phase="train", method='gsutil'):
             p=1,
             bbox_params=alb.BboxParams(format="albumentations"),
         )
-        urls = "gs://imidatasets/openimages-wds/train/openimages-c-train-{0..580}.tar"
+        urls = args.urls_train
 
     elif phase == "validate":
         transform = alb.Compose(
@@ -518,7 +488,7 @@ def get_dataloader(args, phase="train", method='gsutil'):
                 format="albumentations", label_fields=["bbox_labels"]
             ),
         )
-        urls = "gs://imidatasets/openimages-wds/val/openimages-c-val-{0..9}.tar"
+        urls = args.urls_val
     else:
         raise NotImplementedError
 
@@ -537,10 +507,10 @@ def get_dataloader(args, phase="train", method='gsutil'):
 
     shuffle_buffer = args.shuffle_buffer if phase == "train" else 10
 
-    transform_openimages = TransformOpenImages()
+    transform_openimages = TransformOpenImages(aug=transform)
 
     def augment(src):
-        return transform_openimages(src, aug=transform)
+        return transform_openimages(src)
 
     def none_filter(src):  # TODO: check
         return filter_nones(src, has_keys=["image.jpg", "targets.json"])
@@ -580,7 +550,7 @@ def get_dataloader(args, phase="train", method='gsutil'):
             num_workers=args.num_workers,
             drop_last=True,
             collate_fn=collate_id,
-            pin_memory=args.tpu_cores is None,
+            pin_memory=False,
             worker_init_fn=worker_init_fn,
         )
     if 0:  # try to get multidataset working, because then no need to worry about dataset size

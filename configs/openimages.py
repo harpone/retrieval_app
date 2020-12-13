@@ -52,6 +52,8 @@ weight_decay = 1e-4
 
 # Dataset:
 dataset = 'openimages'
+urls_train = '/media/heka/TERA/Data/openimages/val/openimages-z-val-{000000..000007}.tar'  # TODO: testing with val set
+urls_val = '/media/heka/TERA/Data/openimages/val/openimages-z-val-{000000..000007}.tar'
 shuffle_buffer = 1  # collect this many examples then shuffle; larger is better but can lead to OOM
 max_epochs = 1000
 num_sanity_val_steps = 0
@@ -93,7 +95,7 @@ segmentation_depth = 3
 segmentation_out_dim = 350
 loss_scale_segmentation = 1.
 
-# FCOS bbox:
+# Bbox regression:
 fcos_head = 0
 fcos_head_detach = 0
 fcos_width = 1024
