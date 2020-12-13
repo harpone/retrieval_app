@@ -29,7 +29,7 @@ def main(args):
     # most basic trainer, uses good defaults
     # os.environ["WANDB_API_KEY"] = args.wandb_api_key
 
-    logger = pl_loggers.TensorBoardLogger('./tensorboard_logs')
+    logger = pl_loggers.TensorBoardLogger('~/tensorboard_logs')
     checkpoint_callback = ModelCheckpoint(dirpath='/media/heka/TERA/Data/openimages_models/',  # TODO:  replace when VM
                                           filename=join(args.experiment, args.run_name),
                                           monitor='loss_val')
