@@ -7,11 +7,14 @@ import blosc
 from turbojpeg import TurboJPEG
 import pickle
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import numpy as np
+from munch import Munch
 import skimage
 import torch
 import PIL
 import requests
+import importlib
 from detectron2 import model_zoo
 from detectron2.config import get_cfg
 from detectron2.utils.visualizer import Visualizer
@@ -19,6 +22,7 @@ from google.cloud import storage
 from scipy.ndimage import zoom
 from skimage.filters import gaussian
 from skimage.morphology import medial_axis
+import types
 
 from core.config import N_RETRIEVED_RESULTS
 import core.dataio as dataio
@@ -27,6 +31,19 @@ catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
 thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
 jpeg = TurboJPEG()  # TODO: refactor once confirmed working
+
+
+def load_args_module(args_module_):
+
+    args = importlib.import_module(args_module_.config_module).__dict__
+
+    args_new = Munch()
+
+    for key, val in args.items():
+        if '__' not in key:  # drop module specific stuff
+            if not isinstance(val, types.BuiltinFunctionType):  # drop functions etc
+                args_new[key] = val
+    return args_new
 
 
 def image_bytes_from_url(url):
@@ -345,7 +362,7 @@ def visualize_openimages(images, targets, heads_out, num_figs=1):
         mask_seg_isnan = np.isnan(mask_seg_gt.sum(-1).sum(-1))
         mask_seg_notnan = mask_seg_gt[~mask_seg_isnan]
         mask_seg_pos = mask_seg_notnan[mask_seg_notnan.mean(-1).mean(-1) > -1]  # [num_pos_seg, H_out, W_out]
-        mask_seg_idx = np.arange(350)[~mask_seg_isnan]
+        #mask_seg_idx = np.arange(350)[~mask_seg_isnan]
 
         mask_bb_isnan = np.isnan(mask_bbox_gt.sum(-1).sum(-1))
         mask_bb_notnan = mask_bbox_gt[~mask_bb_isnan]
@@ -389,7 +406,8 @@ def visualize_openimages(images, targets, heads_out, num_figs=1):
             rmax = (rmax + 0.5) * 32
             cmin = (cmin - 0.5) * 32
             cmax = (cmax + 0.5) * 32
-            rect = patches.Rectangle((cmin, rmin), cmax - cmin, rmax - rmin, linewidth=1, edgecolor='r', facecolor='none')
+            rect = patches.Rectangle((cmin, rmin), cmax - cmin, rmax - rmin, linewidth=1, edgecolor='r',
+                                     facecolor='none')
             # Add the patch to the Axes
             ax[1, 0].add_patch(rect)
 
