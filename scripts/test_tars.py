@@ -1,6 +1,4 @@
 from itertools import islice
-from munch import Munch
-import torch
 import sys
 import os
 from torch.utils.data import DataLoader
@@ -8,7 +6,7 @@ import time
 import albumentations as alb
 from albumentations.pytorch.transforms import ToTensorV2
 import webdataset as wds
-from webdataset.filters import batched, shuffle
+from webdataset.filters import batched
 
 sys.path.append(os.getcwd())
 from core.dataio import TransformOpenImages, collate_openimages
@@ -42,7 +40,7 @@ dataset = (
     .pipe(batched(batchsize=16, partial=True, collation_fn=collate_openimages))
 )
 
-dataloader = torch.utils.data.DataLoader(
+dataloader = DataLoader(
     dataset,
     batch_size=1,  # because batching done in dataset
     shuffle=False,
