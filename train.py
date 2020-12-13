@@ -1,5 +1,5 @@
 """
-This file runs the main training/val loop, etc... using Lightning Trainer 
+This file runs the main training/val loop, etc... using Lightning Trainer
 """
 import os
 from os.path import join
