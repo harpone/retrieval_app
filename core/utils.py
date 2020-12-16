@@ -25,7 +25,7 @@ from skimage.filters import gaussian
 from skimage.morphology import medial_axis
 import types
 
-from core.config import N_RETRIEVED_RESULTS
+#from core.config import N_RETRIEVED_RESULTS
 #import core.dataio as dataio
 
 catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
