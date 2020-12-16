@@ -1,4 +1,3 @@
-import requests
 from PIL import Image
 import torch
 import io
@@ -10,7 +9,6 @@ import json
 from os.path import join
 import collections
 from google.cloud import storage
-from multiprocessing import Pool
 from termcolor import colored
 from scipy.ndimage import zoom
 import pandas as pd
@@ -759,38 +757,3 @@ class Database:
         entity = {key: val for key, val in zip(self.table_keys, entity_list)}
 
         return code, entity
-
-
-def image_from_url(url):
-    """Load image from `url`
-
-    :param url: str
-    :return:
-    """
-    r = requests.get(url, stream=True)
-    if r.status_code == 200:  # AOK
-        r.raw.decode_content = True
-        img = Image.open(r.raw)
-    else:
-        img = None
-
-    return img
-
-
-def images_from_urls(urls, num_processes=None):
-    """Load multiple images from a list of urls in parallel.
-
-    :param urls: list of strings
-    :param num_processes: 1 or None; will use all available processes if None
-    :return:
-    """
-
-    if num_processes == 1:
-        images = [image_from_url(url) for url in urls]
-    elif num_processes is None:
-        with Pool() as pool:
-            images = pool.map(image_from_url, urls)
-    else:
-        raise NotImplementedError
-
-    return images

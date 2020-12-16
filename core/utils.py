@@ -7,11 +7,13 @@ import blosc
 import pickle
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from multiprocessing import Pool
 import numpy as np
 from munch import Munch
 import skimage
 import torch
 import PIL
+from PIL import Image
 import requests
 import importlib
 from detectron2 import model_zoo
@@ -24,7 +26,7 @@ from skimage.morphology import medial_axis
 import types
 
 from core.config import N_RETRIEVED_RESULTS
-import core.dataio as dataio
+#import core.dataio as dataio
 
 catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
 thing_classes = catalog.thing_classes
@@ -35,6 +37,41 @@ try:
     jpeg = TurboJPEG()  # TODO: refactor once confirmed working
 except ImportError:
     print('Some dependencies not imported...')
+
+
+def image_from_url(url):
+    """Load image from `url`
+
+    :param url: str
+    :return:
+    """
+    r = requests.get(url, stream=True)
+    if r.status_code == 200:  # AOK
+        r.raw.decode_content = True
+        img = Image.open(r.raw)
+    else:
+        img = None
+
+    return img
+
+
+def images_from_urls(urls, num_processes=None):
+    """Load multiple images from a list of urls in parallel.
+
+    :param urls: list of strings
+    :param num_processes: 1 or None; will use all available processes if None
+    :return:
+    """
+
+    if num_processes == 1:
+        images = [image_from_url(url) for url in urls]
+    elif num_processes is None:
+        with Pool() as pool:
+            images = pool.map(image_from_url, urls)
+    else:
+        raise NotImplementedError
+
+    return images
 
 
 def load_args_module(args_module_):
@@ -310,7 +347,7 @@ def get_retrieval_plot(indices, entities, debug_mode=False):
         urls.append(str(entity['url'], encoding='utf-8'))
         preds_item.append(entity['pred'])
         is_things.append(entity['is_thing'])
-    images_ret = dataio.images_from_urls(urls)
+    images_ret = images_from_urls(urls)
 
     # 2) form 2 col, 3 row matplotlib plot with h_center, w_center scatter
     fig, ax = plt.subplots(N_RETRIEVED_RESULTS // 2, 2, figsize=(13, 13))
