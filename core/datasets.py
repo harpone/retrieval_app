@@ -2,7 +2,7 @@ import numpy as np
 from torch.utils.data import Dataset
 
 
-from core.dataio import image_from_url
+from core.utils import image_from_url
 
 
 class URLDataset(Dataset):
