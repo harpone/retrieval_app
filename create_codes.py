@@ -162,7 +162,7 @@ if __name__ == "__main__":
     print(f"num_workers={num_workers}")
     print("**************************")
 
-    urls_path = "https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-train2.tsv"  # about 1 min
+    urls_path = "https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-train3.tsv"  # about 1 min
     # urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-validation.tsv'
 
     db_out_basename = (
