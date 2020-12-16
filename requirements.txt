@@ -14,3 +14,7 @@ ngt
 Flask-Uploads
 Flask-Wtf
 termcolor
+pytorch_lightning
+munch
+blosc
+

@@ -4,7 +4,6 @@ import shutil
 import uuid
 from detectron2.data import MetadataCatalog
 import blosc
-from turbojpeg import TurboJPEG
 import pickle
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -30,7 +29,12 @@ import core.dataio as dataio
 catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
 thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
-jpeg = TurboJPEG()  # TODO: refactor once confirmed working
+
+try:
+    from turbojpeg import TurboJPEG
+    jpeg = TurboJPEG()  # TODO: refactor once confirmed working
+except ImportError:
+    print('Some dependencies not imported...')
 
 
 def load_args_module(args_module_):
