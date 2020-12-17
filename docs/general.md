@@ -224,6 +224,17 @@ https://cloud.google.com/vision/product-search/docs/quickstart
 - transparent box!
 - use own model?
 
+# TODO:
+- Superhero?
+- Tempo rahoitus?
+
+# vast.ai
+- restricted github token?
+- restricted service account?
+
+# TODOs:
+- save `create_codes` every N steps and upload
+
 
 
 
