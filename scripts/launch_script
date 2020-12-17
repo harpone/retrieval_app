@@ -1,0 +1,32 @@
+#!/bin/bash
+# TODO: which python? How to use correct one?
+
+echo "PYTHON ENV:"
+which python
+echo
+nvidia-smi
+
+echo "CLONING REPO:"
+git clone https://harpone:df5ef99be63047970f401c0458b9764b0a2f565e@github.com/harpone/retrieval_app.git
+git pull
+
+echo "INSTALLING REQUIREMENTS:"
+pip install -r ./retrieval_app/requirements.txt
+
+echo "UPGRADING SOME DEPS:"
+pip install --upgrade albumentations
+pip install --upgrade pyyaml
+
+cd ./retrieval_app/
+pwd
+
+service_account="{\"type\": \"service_account\",\"project_id\": \"neohuman\",\"private_key_id\": \"b4830a2bfc1f9b2ab0babecda68f2be4b283e02f\",\"private_key\": \"-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCR1qsSRINfVUps\nRhsryyRWgZnkRpdH9QCoLz/gXkn07jxECGvxJAc50A9ZpvrJPNBLWCsjDAMR5fRS\nSLN6WaZu9TWb9ceIH4ap8cO3oI+2KCN7+SzWHonrZ/giMovcVOxa7dEyPRFkyHo6\nmMrSEJbzIaTn5whjrsrbucS15IdSCUOHMLs/VJ0MFbrDDPNeLNKxIPwi+UEPPFSe\nPPgqPk4MzGs7Zu2OA6pvog+b/qCuhA6lrmJscZE1T/FlRTMrE2WggumQs0wKYY/v\nMrGx2laPpXrrsWvDwBw+7cwaT8jla7fpK5vCnVouYDoK198cZGhnHqa/aA3bUIqK\nLJIobBARAgMBAAECggEACpsDwqFos//Z7eufkbd6kMTo1KeH3FkrlKTSU8YfluLV\nT0rqffU1W6WvBsFvIZUdKQGEKjlh0W/O15tcW/SANzejT/sXaSWGb5OP51Rokbde\nXzy0tJcwx0WpZI6W9QKtqS4muq0jYkLMVWMOStOfL+v9gp9z5iXhsDQUo01MxEZ2\njnlkiTsjsDXVl6ZynfSsj2Q7I0frKR5whLaFpHXwqN5hF3rVAoN68eHFcRKZYTAl\nW7H3Q27BFw288O6FAh9GCvloRzBNI2JaZ6cmUW+DUvohFBvg1FTTlKDTHEfoDWYy\neja2x+/4+1hUP14vl4DKh3LIsHmQZzQjlEZ2U9C87QKBgQDKALjAfmuA6BEKIG4o\npZ4GT9r1TwOYb4pGiJjOQPxA8L4PhKUhePsNOh3jVFZ2El90XubChmI/K122LNSn\nEhYJ5xCHeEC9u6FjntzaLaT7aPuqhATxsRtWgUEqFXbjnji+muujwlv2Az3Wodn7\njemjhz5goYVElldQUZqkj0TbHQKBgQC40pAUN3aJRlYa83MqZqm5+88D/m53Xq6P\nh2S7/5AnqfWbWd7Tew+U0tJeZSvEAh+fYilPwwBGTtqDFzOGq1aYsx/kAQF0kqDw\nuvum4dHl8Qb2H1A3VHeYFx1PIsmvdj+wQQDeHaRFYuVavPAj3GGVhD6JLwC3Ys0F\n3NdG/LAChQKBgBw8l5bI1SwyxFb/C4cBB6LoPLo3rk/7n3+Wjo2eReSqAldW+mJA\ncA98RTtGycM9dDxnG6irckZUQIg7ogosnAoMU6IsLBiZhsjPJx4UbVB7b1p5k9tZ\nH3IrJTnFwFW3A0WZkEDW5VXxRA6hlz/zqWojeJO3YFKjFVdz4MMKB9z9AoGAC9pd\nKR7BeF5NaV8RlLeOzQGsLhpkJT2qPkQ1nqTuLs0Ellj2JGPxBN9cZHdijiiAtK0L\n7zSXUOr/soaLZGianiJmui2iVUKOFcI4H2S+HFwP0TsC3vmIzfU1iPy3KIyR2xDg\nKF6ISXblNKOHVxVsILWheRTNm/U3JtgZ6lCMTS0CgYEAukPm9qYJwwwILKPHGs14\ngfJXK4R7+KFWbMGsiDNeErEGddjwn8licmKSWeYFPZPri6uYDjDzSDWkkV4l8MdX\nkglqGXq5pTtca7CtSM+vpfY227uNaPYPlq7F5ykr8mv8bjBfw6D6TH5zl2vamwN9\nXhjSXWj/7H/qoASlZFR7hD8=\n-----END PRIVATE KEY-----\n\",\"client_email\": \"gcs-read-write@neohuman.iam.gserviceaccount.com\",\"client_id\": \"108761772252780096220\",\"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\"token_uri\": \"https://oauth2.googleapis.com/token\",\"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\",\"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/gcs-read-write%40neohuman.iam.gserviceaccount.com\"}"
+
+echo ${service_account} > service_account.json
+
+export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/retrieval_app/service_account.json
+
+python -m pip install detectron2 -f \
+  https://dl.fbaipublicfiles.com/detectron2/wheels/cu101/torch1.7/index.html
+
+python scripts/create_codes.py
