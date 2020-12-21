@@ -30,11 +30,13 @@ uploaded_filename = None
 
 
 """
-
+TODO:
+- secret from config: app.config.from_pyfile('config.py'), config.py NOT in github!
 """
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
+#app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
+app.config.from_pyfile('./configs/appconfig.py')
 app.config['UPLOADED_PHOTOS_DEST'] = './static/cache'
 
 photos = UploadSet('photos', IMAGES)

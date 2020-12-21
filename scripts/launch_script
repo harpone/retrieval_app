@@ -28,7 +28,6 @@ echo ${service_account} > service_account.json
 
 export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/retrieval_app/service_account.json
 
-python -m pip install detectron2 -f \
-  https://dl.fbaipublicfiles.com/detectron2/wheels/cu101/torch1.7/index.html
+python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu101/torch1.7/index.html
 
 python scripts/create_codes.py
