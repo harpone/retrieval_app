@@ -201,6 +201,8 @@ if __name__ == "__main__":
     image_urls_z = [url.replace("_o.jpg", "_z.jpg") for url in image_urls_o]
     image_urls_z = np.array(image_urls_z).astype(np.string_)[start_from:end_at]
 
+    print(f'Total {len(image_urls_z)} images in batch.')
+
     if num_gpus > 1:
         add_random_hash = True
         mp.spawn(
