@@ -94,7 +94,7 @@ def create_codes(
 
     dataloader = DataLoader(
         dataset,
-        batch_size=1,  # because batching done in dataset
+        batch_size=1,  # because detectron does 1 example at a time
         num_workers=num_workers,
         collate_fn=drop_batch_dim,
         pin_memory=True,
@@ -166,10 +166,10 @@ if __name__ == "__main__":
 
     start_from = 0
     end_at = 1000
-    num_gpus = 1
+    num_gpus = 2
     num_workers = 4
     upload_to_storage = True
-    upload_every = 50  # TODO testing
+    upload_every = 100  # TODO testing
 
     print("**************************")
     print(f"start_from={start_from}")
