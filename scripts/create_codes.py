@@ -174,6 +174,7 @@ if __name__ == "__main__":
     print("**************************")
     print(f"start_from={start_from}")
     print(f"end_at={end_at}")
+    print(f"num_gpus={num_gpus}")
     print(f"num_workers={num_workers}")
     print("**************************")
 
