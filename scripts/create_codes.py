@@ -127,17 +127,17 @@ def create_codes(
                 del result_this["seg_mask"]  # will not be stored for now
                 database.append_to_store(url=image_url, **result_this)
 
-                if counter_codes % flush_every == 0:
-                    database.flush()
-                if (counter_codes % upload_every == 0) and upload_to_storage:
-                    database.flush()
-                    remote_path = join("database", db_out_name)
-                    upload_to_gcs(
-                        "mldata-westeu",
-                        blob_path=remote_path,
-                        local_path=join("/home/heka/model_data/", db_out_name),
-                    )
-                    print(f"\nProcess {gpu} results uploaded to {remote_path}")
+            if counter_images % flush_every == 0:
+                database.flush()
+            if (counter_images % upload_every == 0) and upload_to_storage:
+                database.flush()
+                remote_path = join("database", db_out_name)
+                upload_to_gcs(
+                    "mldata-westeu",
+                    blob_path=remote_path,
+                    local_path=join("/home/heka/model_data/", db_out_name),
+                )
+                print(f"\nProcess {gpu} results uploaded to {remote_path}")
 
             print(
                 f"\rdevice {gpu}: images={counter_images}, codes={counter_codes} "
