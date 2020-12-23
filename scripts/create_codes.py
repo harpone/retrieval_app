@@ -115,9 +115,9 @@ def create_codes(
                 img, image_url, _ = next(dataloader_iterator)
             except StopIteration:
                 break
-            except Exception as e:  # need to skip if very rare error (pytorch urllib3.exceptions.ProtocolError)
-                print(e)
-                continue
+            # except Exception as e:  # need to skip if very rare error (pytorch urllib3.exceptions.ProtocolError)
+            #     print(e)
+            #     continue
 
             counter_images += 1
             if img is None or img.mode != "RGB":  # still PIL but transformed
