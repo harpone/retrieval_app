@@ -37,6 +37,7 @@ def create_codes(
     db_out_basename,
     num_workers=1,
     upload_to_storage=False,
+    upload_every=None,
     add_random_hash=False,
 ):
     """Generates a retrieval code and coarse grained segmentation for each image in `image_paths` and inserts these
@@ -47,6 +48,7 @@ def create_codes(
     """
     # profiler = Profiler()
     # profiler.start()
+    upload_every = 1000000000 if upload_every is None else upload_every
     print(f"Process {gpu} started.")
 
     torch.cuda.set_device(gpu)
@@ -127,6 +129,15 @@ def create_codes(
 
                 if counter_codes % flush_every == 0:
                     database.flush()
+                if (counter_codes % upload_every == 0) and upload_to_storage:
+                    database.flush()
+                    remote_path = join("database", db_out_name)
+                    upload_to_gcs(
+                        "mldata-westeu",
+                        blob_path=remote_path,
+                        local_path=join("/home/heka/model_data/", db_out_name),
+                    )
+                    print(f"\nProcess {gpu} results uploaded to {remote_path}")
 
             print(
                 f"\rdevice {gpu}: images={counter_images}, codes={counter_codes} "
@@ -154,10 +165,11 @@ def create_codes(
 if __name__ == "__main__":
 
     start_from = 0
-    end_at = 25
+    end_at = 100
     num_gpus = 1
     num_workers = 4
     upload_to_storage = True
+    upload_every = 50  # TODO testing
 
     print("**************************")
     print(f"start_from={start_from}")
@@ -194,6 +206,7 @@ if __name__ == "__main__":
                 db_out_basename,
                 num_workers,
                 upload_to_storage,
+                upload_every,
                 add_random_hash,
             ),
         )
@@ -206,5 +219,6 @@ if __name__ == "__main__":
             db_out_basename,
             num_workers,
             upload_to_storage,
+            upload_every,
             add_random_hash,
         )

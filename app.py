@@ -31,7 +31,6 @@ uploaded_filename = None
 
 """
 TODO:
-- secret from config: app.config.from_pyfile('config.py'), config.py NOT in github!
 """
 
 app = Flask(__name__)
