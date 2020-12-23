@@ -238,7 +238,7 @@ class SuperModel(nn.Module):
             try:
                 state_dict = torch.load(repnet_pth)['state_dict']
             except Exception as e:
-                print(e)  # TODO: catch and use
+                #print(e)  # TODO: catch and use
                 print(colored('Local repnet checkpoint not found... downloading from GCS.', 'red'))
                 if not os.path.exists('./model_data/'):
                     os.makedirs('./model_data/', exist_ok=True)

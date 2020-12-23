@@ -31,6 +31,10 @@ thing_classes = catalog.thing_classes
 stuff_classes = catalog.stuff_classes
 
 
+def drop_batch_dim(x_):
+    return x_[0]
+
+
 def create_codes(
     gpu,
     image_urls,
@@ -88,9 +92,6 @@ def create_codes(
     # Def dataloader:
     image_urls_this = image_urls[gpu::num_gpus]  # split evenly for all devices
     dataset = URLDataset(url_list=image_urls_this, transform=None)  # TODO: now None!!
-
-    def drop_batch_dim(x_):
-        return x_[0]
 
     dataloader = DataLoader(
         dataset,
