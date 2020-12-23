@@ -167,7 +167,7 @@ if __name__ == "__main__":
     start_from = 0
     end_at = 1000
     num_gpus = 2
-    num_workers = 4
+    num_workers = 8
     upload_to_storage = True
     upload_every = 100  # TODO testing
 
