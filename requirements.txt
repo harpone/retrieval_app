@@ -18,4 +18,4 @@ pytorch_lightning
 munch
 blosc
 webdataset
-google-cloud
+google-cloud-storage
