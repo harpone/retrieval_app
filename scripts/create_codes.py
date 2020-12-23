@@ -165,7 +165,7 @@ def create_codes(
 if __name__ == "__main__":
 
     start_from = 0
-    end_at = 100
+    end_at = 1000
     num_gpus = 1
     num_workers = 4
     upload_to_storage = True
