@@ -625,13 +625,15 @@ class Database:
     def __init__(
         self,
         database_name,
+        data_root='./model_data/',
         url_max_len=128,
         mode="w",
         title=None,
         expected_rows=1000000,
     ):
 
-        self.data_root = "/home/heka/model_data/"
+        #self.data_root = "/home/heka/model_data/"
+        self.data_root = data_root
         if not os.path.exists(self.data_root):
             os.makedirs(self.data_root, exist_ok=True)
 
