@@ -34,7 +34,7 @@ service_account="{\"type\": \"service_account\",\"project_id\": \"neohuman\",\"p
 
 echo ${service_account} > service_account.json
 
-export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/retrieval_app/service_account.json
+export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/service_account.json
 
 python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu110/torch1.7/index.html
 
