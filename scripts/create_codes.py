@@ -67,7 +67,7 @@ def create_codes(
         db_out_name = db_out_basename + "_" + uuid.uuid1().hex[:16] + ".h5"
     else:
         db_out_name = db_out_basename + ".h5"
-    print(colored(f'Saving database to {join("/home/heka/model_data/", db_out_name)}'))
+    print(colored(f'Saving database to {join("./model_data/", db_out_name)}'))
     database = Database(
         db_out_name,
         url_max_len=url_max_len,
@@ -166,7 +166,7 @@ if __name__ == "__main__":
 
     start_from = 0
     end_at = 1000
-    num_gpus = 2
+    num_gpus = 1
     num_workers = 4
     upload_to_storage = True
     upload_every = 100  # TODO testing
