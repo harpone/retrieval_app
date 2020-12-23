@@ -25,8 +25,6 @@ from core.datasets import URLDataset
 # TODO: maybe also line simplification to constant number of points:
 # https://github.com/Permafacture/Py-Visvalingam-Whyatt
 
-# TODO: now downloading everything in all processes... maybe make efficient
-
 # for sanity checks:
 catalog = MetadataCatalog.get("coco_2017_train_panoptic_separated")
 thing_classes = catalog.thing_classes
