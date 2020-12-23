@@ -138,7 +138,7 @@ def create_codes(
                 upload_to_gcs(
                     "mldata-westeu",
                     blob_path=remote_path,
-                    local_path=join("/home/heka/model_data/", db_out_name),
+                    local_path=join("./model_data/", db_out_name),
                 )
                 print(f"\nProcess {gpu} results uploaded to {remote_path}")
 
@@ -159,7 +159,7 @@ def create_codes(
         upload_to_gcs(
             "mldata-westeu",
             blob_path=remote_path,
-            local_path=join("/home/heka/model_data/", db_out_name),
+            local_path=join("./model_data/", db_out_name),
         )
         print(f"\nProcess {gpu} results uploaded to {remote_path}")
     return True
