@@ -234,6 +234,7 @@ https://cloud.google.com/vision/product-search/docs/quickstart
 
 # TODOs:
 - save `create_codes` every N steps and upload
+- maybe use compression (blosc) with pytables... let's see the file sizes first
 
 
 
