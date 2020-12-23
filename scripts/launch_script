@@ -6,6 +6,14 @@ which python
 echo
 nvidia-smi
 
+apt update
+apt install -y build-essential
+apt install -y git
+apt install -y libgl1-mesa-glx
+apt install -y libglib2.0-0
+
+gcc --version
+
 echo "CLONING REPO:"
 # github read access:
 git clone https://harpone:df5ef99be63047970f401c0458b9764b0a2f565e@github.com/harpone/retrieval_app.git
@@ -28,6 +36,6 @@ echo ${service_account} > service_account.json
 
 export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/retrieval_app/service_account.json
 
-python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu101/torch1.7/index.html
+python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu110/torch1.7/index.html
 
 python scripts/create_codes.py
