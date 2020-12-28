@@ -24,6 +24,7 @@ from scipy.ndimage import zoom
 from skimage.filters import gaussian
 from skimage.morphology import medial_axis
 import types
+from termcolor import colored
 
 #from core.config import N_RETRIEVED_RESULTS
 #import core.dataio as dataio
@@ -45,14 +46,16 @@ def image_from_url(url):
     :param url: str
     :return:
     """
-    r = requests.get(url, stream=True)
-    if r.status_code == 200:  # AOK
-        r.raw.decode_content = True
-        img = Image.open(r.raw)
-    else:
-        img = None
+    try:
+        r = requests.get(url, stream=True)
+        if r.status_code == 200:  # AOK
+            r.raw.decode_content = True
+            img = Image.open(r.raw)
+            return img
+    except Exception as e:
+        print(colored(e), 'yellow')
 
-    return img
+    return None  # let downstream task handle missing images
 
 
 def images_from_urls(urls, num_processes=None):
