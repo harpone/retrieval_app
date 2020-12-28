@@ -165,7 +165,7 @@ def create_codes(
 
 if __name__ == "__main__":
 
-    start_from = 0
+    start_from = 400000
     end_at = 1000000
     num_gpus = 6
     num_workers = 5
