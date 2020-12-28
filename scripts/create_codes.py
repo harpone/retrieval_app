@@ -165,7 +165,7 @@ def create_codes(
 
 if __name__ == "__main__":
 
-    start_from = 400000
+    start_from = 0
     end_at = 1000000
     num_gpus = 6
     num_workers = 5
@@ -179,7 +179,7 @@ if __name__ == "__main__":
     print(f"num_workers={num_workers}")
     print("**************************")
 
-    urls_path = "https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-train5.tsv"  # about 1 min
+    urls_path = "https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-train6.tsv"  # about 1 min
     # urls_path = 'https://storage.googleapis.com/cvdf-datasets/oid/open-images-dataset-validation.tsv'
 
     db_out_basename = (
