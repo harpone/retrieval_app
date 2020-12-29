@@ -53,7 +53,7 @@ def image_from_url(url):
             img = Image.open(r.raw)
             return img
     except Exception as e:
-        print(colored(e), 'yellow')
+        print(e)
 
     return None  # let downstream task handle missing images
 
