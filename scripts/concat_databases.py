@@ -7,8 +7,10 @@ from core.dataio import Database
 
 
 def main(args_):
+    """Concatenates all databases in a given folder.
+    """
 
-    db_root = args.folder
+    db_root = args_.folder
     db_names = os.listdir(db_root)
     db_names = [db_name for db_name in db_names if '.h5' in db_name]
 
@@ -18,7 +20,7 @@ def main(args_):
 
     # WARNING: opens the first database and will IMMEDIATELY begin writing to it, so will get screwed up if interrupted!
     # TODO: get url_max_len from Database attrs!
-    database_final = Database(args.outname,
+    database_final = Database(args_.outname,
                               data_root=db_root,
                               url_max_len=64,
                               mode='w',
