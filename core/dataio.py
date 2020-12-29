@@ -633,6 +633,7 @@ class Database:
     ):
 
         #self.data_root = "/home/heka/model_data/"
+        self.url_max_len = url_max_len
         self.data_root = data_root
         if not os.path.exists(self.data_root):
             os.makedirs(self.data_root, exist_ok=True)
