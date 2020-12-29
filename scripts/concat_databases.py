@@ -38,8 +38,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--folder", type='str', default=default_folder)
-    parser.add_argument("--outname", type='str', default=default_outname)
+    parser.add_argument("--folder", type=str, default=default_folder)
+    parser.add_argument("--outname", type=str, default=default_outname)
 
     args = parser.parse_args()
     main(args)
