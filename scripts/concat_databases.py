@@ -2,7 +2,9 @@ import os
 import argparse
 import numpy as np
 from os.path import join
+import sys
 
+sys.path.append(os.getcwd())
 from core.dataio import Database
 
 
