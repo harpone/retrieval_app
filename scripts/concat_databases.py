@@ -17,6 +17,7 @@ def main(args_):
     databases = [Database(join(db_root, db_name), mode='r', title=None)
                  for db_name in db_names]
     expected_rows = np.sum([db.codes.shape[0] for db in databases])
+    print(f'Final db number of items={expected_rows}')
 
     # WARNING: opens the first database and will IMMEDIATELY begin writing to it, so will get screwed up if interrupted!
     # TODO: get url_max_len from Database attrs!
