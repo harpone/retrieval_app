@@ -60,7 +60,6 @@ print(colored('Video capture device initialized', 'green'))
 #database_name = 'open-images-dataset-train0_0_475000.h5'  # TODO: as arg maybe
 database_name = 'db_dec_2020.h5'
 database_root = '/home/heka/model_data'
-print(colored(f'Loading database from {database_name}', 'green'))
 database = Database(database_name, data_root=database_root, mode='r')
 codes = database.codes
 entities = database.table  # use .table for retrieval, table.row for insertion
@@ -74,7 +73,7 @@ if not os.path.exists(index_path):
         os.makedirs('/home/heka/model_data/', exist_ok=True)
     ngtpy.create(path=index_path, dimension=128, object_type='Float')
     ngtpy_index = ngtpy.Index(index_path)
-    ngtpy_index.batch_insert(np.array(codes, dtype=np.float64))  # TODO: limits of batch_insert?  11s for 100k objects
+    ngtpy_index.batch_insert(np.array(codes, dtype=np.float64), num_threads=8)  # 11s for 100k objects
     ngtpy_index.save()
 else:
     print(colored('Loading an existing NGTPY index...', 'green'))
