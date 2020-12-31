@@ -35,7 +35,7 @@ TODO:
 
 app = Flask(__name__)
 #app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
-app.config.from_pyfile('./configs/appconfig.py')
+app.config.from_pyfile('configs/appconfig.py')
 app.config['UPLOADED_PHOTOS_DEST'] = './static/cache'
 
 photos = UploadSet('photos', IMAGES)

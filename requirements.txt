@@ -19,3 +19,4 @@ munch
 blosc
 webdataset
 google-cloud-storage
+waitress
