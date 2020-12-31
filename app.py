@@ -74,7 +74,7 @@ if not os.path.exists(index_path):
         os.makedirs('/home/heka/model_data/', exist_ok=True)
     ngtpy.create(path=index_path, dimension=128, object_type='Float')
     ngtpy_index = ngtpy.Index(index_path)
-    ngtpy_index.batch_insert(np.array(codes))  # TODO: limits of batch_insert?  11s for 100k objects @home
+    ngtpy_index.batch_insert(np.array(codes, dtype=np.float64))  # TODO: limits of batch_insert?  11s for 100k objects
     ngtpy_index.save()
 else:
     print(colored('Loading an existing NGTPY index...', 'green'))
