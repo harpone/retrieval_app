@@ -56,7 +56,8 @@ videocap = cv2.VideoCapture(-1)
 print(colored('Video capture device initialized', 'green'))
 
 # Set up database:  # TODO: protect codes and index! Needs refactoring!! Actually maybe
-database_name = 'open-images-dataset-train0_0_475000.h5'  # TODO: as arg maybe
+#database_name = 'open-images-dataset-train0_0_475000.h5'  # TODO: as arg maybe
+database_name = 'db_dec_2020.h5'
 print(colored('Loading database...', 'green'))
 database = Database(database_name, mode='r')
 codes = database.codes
