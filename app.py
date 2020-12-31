@@ -6,6 +6,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import SubmitField
 import os
+from os.path import join
 import cv2
 from termcolor import colored
 from PIL import Image
@@ -58,8 +59,9 @@ print(colored('Video capture device initialized', 'green'))
 # Set up database:  # TODO: protect codes and index! Needs refactoring!! Actually maybe
 #database_name = 'open-images-dataset-train0_0_475000.h5'  # TODO: as arg maybe
 database_name = 'db_dec_2020.h5'
-print(colored('Loading database...', 'green'))
-database = Database(database_name, mode='r')
+database_root = '/home/heka/model_data'
+print(colored(f'Loading database from {database_name}', 'green'))
+database = Database(database_name, data_root=database_root, mode='r')
 codes = database.codes
 entities = database.table  # use .table for retrieval, table.row for insertion
 
