@@ -7,7 +7,8 @@ import blosc
 import pickle
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from multiprocessing import Pool
+#from multiprocessing import set_start_method, Pool
+import multiprocessing as mp
 import numpy as np
 from munch import Munch
 import skimage
@@ -28,6 +29,10 @@ from termcolor import colored
 
 #from core.config import N_RETRIEVED_RESULTS
 #import core.dataio as dataio
+
+# TODO: if main process uses lots of RAM, using 'fork' start method will try to fork this main process => OOM
+# => need to spawn or think of something else...
+#set_start_method('spawn')
 
 catalog = MetadataCatalog.get('coco_2017_train_panoptic_separated')
 thing_classes = catalog.thing_classes
@@ -69,7 +74,8 @@ def images_from_urls(urls, num_processes=None):
     if num_processes == 1:
         images = [image_from_url(url) for url in urls]
     elif num_processes is None:
-        with Pool() as pool:
+        ctx = mp.get_context('spawn')  # TODO: still getting OSError: Cannot allocate memory!!!
+        with ctx.Pool() as pool:
             images = pool.map(image_from_url, urls)
     else:
         raise NotImplementedError
