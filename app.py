@@ -274,4 +274,4 @@ if __name__ == '__main__':
     #app.run(debug=False)
     this_files_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(this_files_dir)
-    serve(app, host='0.0.0.0', port=8001)
+    serve(app, host='0.0.0.0', port=8001, threads=1)  # TODO: check threads OK!

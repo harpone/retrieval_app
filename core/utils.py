@@ -27,7 +27,7 @@ from skimage.morphology import medial_axis
 import types
 from termcolor import colored
 
-#from core.config import N_RETRIEVED_RESULTS
+from core.config import N_RETRIEVED_RESULTS
 #import core.dataio as dataio
 
 # TODO: if main process uses lots of RAM, using 'fork' start method will try to fork this main process => OOM
@@ -74,9 +74,12 @@ def images_from_urls(urls, num_processes=None):
     if num_processes == 1:
         images = [image_from_url(url) for url in urls]
     elif num_processes is None:
-        ctx = mp.get_context('spawn')  # TODO: still getting OSError: Cannot allocate memory!!! Something wrong with desktop?
-        with ctx.Pool(processes=2) as pool:
-            images = pool.map(image_from_url, urls)
+        # ctx = mp.get_context('spawn')  # TODO: still getting OSError: Cannot allocate memory!!! Something wrong with desktop?
+        # with ctx.Pool() as pool:
+        #     images = pool.map(image_from_url, urls)
+        pool = mp.Pool()
+        images = pool.map(image_from_url, urls)
+        pool.close()
     else:
         raise NotImplementedError
 
