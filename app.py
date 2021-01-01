@@ -102,17 +102,16 @@ def get_numpy_frame():
 
 
 def get_jpeg_frame():
-    ret, frame = videocap.read()  # frame [480, 640, 3] by default
-    ret, jpeg = cv2.imencode('.jpg', frame)
+    _, frame = videocap.read()  # frame [480, 640, 3] by default
+    _, jpeg = cv2.imencode('.jpg', frame)
     return jpeg.tobytes()
 
 
 def get_entity(idx):
     try:
-        code, entity = database[idx]
+        _, entity = database[idx]
     except IndexError:
         abort(404)
-        entity = None
     return entity
 
 
@@ -155,8 +154,10 @@ def video_feed():
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_photo():
     global uploaded_filename
-    form = UploadForm()
+    form = UploadForm()  # TODO: OK jpeg is here... but missing from request.form in query_image
     if form.validate_on_submit():
+        uploaded_filename = photos.save(form.photo.data)
+        #file_url = photos.url(uploaded_filename)
         return redirect(url_for('query_image'))
     return render_template('upload.html', form=form)
 
