@@ -74,8 +74,8 @@ def images_from_urls(urls, num_processes=None):
     if num_processes == 1:
         images = [image_from_url(url) for url in urls]
     elif num_processes is None:
-        ctx = mp.get_context('spawn')  # TODO: still getting OSError: Cannot allocate memory!!!
-        with ctx.Pool() as pool:
+        ctx = mp.get_context('spawn')  # TODO: still getting OSError: Cannot allocate memory!!! Something wrong with desktop?
+        with ctx.Pool(processes=2) as pool:
             images = pool.map(image_from_url, urls)
     else:
         raise NotImplementedError
