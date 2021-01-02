@@ -240,30 +240,6 @@ https://cloud.google.com/vision/product-search/docs/quickstart
 - ATM total about 380k images in GCS (from sets 3 and 4)
 - On a 6xGTX1080 with 1.25 img/s per GPU => 37h for 1M images = 28$
 
-"""
-   data = fetcher.fetch(index)
-  File "/opt/conda/lib/python3.8/site-packages/torch/utils/data/_utils/fetch.py", line 44, in fetch
-    data = [self.dataset[idx] for idx in possibly_batched_index]
-  File "/opt/conda/lib/python3.8/site-packages/torch/utils/data/_utils/fetch.py", line 44, in <listcomp>
-    data = [self.dataset[idx] for idx in possibly_batched_index]
-  File "/root/retrieval_app/core/datasets.py", line 33, in __getitem__
-    img = image_from_url(url)
-  File "/root/retrieval_app/core/utils.py", line 48, in image_from_url
-    r = requests.get(url, stream=True)
-  File "/opt/conda/lib/python3.8/site-packages/requests/api.py", line 76, in get
-    return request('get', url, params=params, **kwargs)
-  File "/opt/conda/lib/python3.8/site-packages/requests/api.py", line 61, in request
-    return session.request(method=method, url=url, **kwargs)
-  File "/opt/conda/lib/python3.8/site-packages/requests/sessions.py", line 530, in request
-    resp = self.send(prep, **send_kwargs)
-  File "/opt/conda/lib/python3.8/site-packages/requests/sessions.py", line 643, in send
-    r = adapter.send(request, **kwargs)
-  File "/opt/conda/lib/python3.8/site-packages/requests/adapters.py", line 514, in send
-    raise SSLError(e, request=request)
-requests.exceptions.SSLError: HTTPSConnectionPool(host='farm6.staticflickr.com', port=443): Max retries exceeded with url: /3602/3640606894_f6d935c316_z.jpg (Caused by SSLError(SSLError("read error: Error([('SSL routines', 'ssl3_get_record', 'decryption failed or bad record mac')])")))
-"""
-
-
 
 
 
