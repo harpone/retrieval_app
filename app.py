@@ -58,7 +58,7 @@ print(colored('Video capture device initialized', 'green'))
 
 # Set up database:  # TODO: protect codes and index! Needs refactoring!! Actually maybe
 #database_name = 'open-images-dataset-train0_0_475000.h5'  # TODO: as arg maybe
-database_name = 'db_dec_2020.h5'
+database_name = 'db_jan_2021.h5'
 database_root = '/home/heka/model_data'
 database = Database(database_name, data_root=database_root, mode='r')
 codes = database.codes
