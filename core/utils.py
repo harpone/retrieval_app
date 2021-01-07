@@ -364,25 +364,28 @@ def get_retrieval_plot(indices, entities, debug_mode=False):
     # 2) form 2 col, 3 row matplotlib plot with h_center, w_center scatter
     fig, ax = plt.subplots(N_RETRIEVED_RESULTS // 2, 2, figsize=(13, 13))
     for n in range(len(images_ret)):
-        img_ret = images_ret[n]
-        img_ret = np.array(img_ret)
-        h, w = img_ret.shape[:-1]
-        h_center = h_centers[n]
-        w_center = w_centers[n]
-        pred_item = preds_item[n]
-        #is_thing = is_things[n]
+        try:
+            img_ret = images_ret[n]
+            img_ret = np.array(img_ret)
+            h, w = img_ret.shape[:-1]
+            h_center = h_centers[n]
+            w_center = w_centers[n]
+            pred_item = preds_item[n]
+            #is_thing = is_things[n]
 
-        i = n // 2
-        j = n % 2
+            i = n // 2
+            j = n % 2
 
-        ax[i, j].imshow(np.array(img_ret))
-        if h_center >= 0:
-            ax[i, j].scatter(w_center * w, h_center * h, s=500, c='r', marker='o', alpha=0.3)
-            if debug_mode:
-                text_dict = dict(boxstyle="round", fc="white", ec="green")
-                ax[i, j].annotate(pred_item, (w_center * w - 2, h_center * h + 2), bbox=text_dict)
+            ax[i, j].imshow(np.array(img_ret))
+            if h_center >= 0:
+                ax[i, j].scatter(w_center * w, h_center * h, s=500, c='r', marker='o', alpha=0.3)
+                if debug_mode:
+                    text_dict = dict(boxstyle="round", fc="white", ec="green")
+                    ax[i, j].annotate(pred_item, (w_center * w - 2, h_center * h + 2), bbox=text_dict)
 
-        ax[i, j].set_axis_off()
+            ax[i, j].set_axis_off()
+        except ValueError:  # prolly None?
+            pass
 
     rnd_string = uuid.uuid1().hex[:16]  # need unique filename to avoid browser using cache
     retrieval_img_path = f'./static/cache/retrieval_img_{rnd_string}.jpg'
