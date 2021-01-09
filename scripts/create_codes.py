@@ -160,6 +160,7 @@ def create_codes(
             local_path=join("./model_data/", db_out_name),
         )
         print(f"\nProcess {gpu} results uploaded to {remote_path}")
+        print('ALL DONE.')
     return True
 
 
