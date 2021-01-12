@@ -21,7 +21,7 @@ from core.config import RESIZE_TO, N_RETRIEVED_RESULTS
 from core.utils import get_query_plot, get_retrieval_plot, delete_plot_cache
 
 DEBUGGING_WITHOUT_MODEL = False  # TODO: not up to date (loads a npz file instead of dict)
-DEBUG_WITH_PREDS = False  # will show image, item preds in plots
+DEBUG_WITH_PREDS = True  # will show image, item preds in plots
 
 RESULTS = None
 query_img_path = None
