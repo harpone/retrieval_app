@@ -6,7 +6,6 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import SubmitField
 import os
-from os.path import join
 import cv2
 from termcolor import colored
 from PIL import Image
@@ -32,7 +31,8 @@ uploaded_filename = None
 
 """
 TODO:
-- now debugging locally with old database!!!!
+- now debugging locally with old database!!!! Rebuild index - takes lots or RAM locally
+- build small dev db/index
 """
 
 app = Flask(__name__)
