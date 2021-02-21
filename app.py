@@ -22,11 +22,13 @@ from core.utils import get_query_plot, get_retrieval_plot, delete_plot_cache
 DEBUGGING_WITHOUT_MODEL = False  # TODO: not up to date (loads a npz file instead of dict)
 DEBUG_WITH_PREDS = False  # will show image, item preds in plots
 
+# TODO: could be a bad idea using locals in the first place... multiprocessing could get these confused?
 RESULTS = None
 query_img_path = None
 retrieval_img_path = None  # not yet retrieved
 ids = None
-uploaded_filename = None
+#uploaded_filename = None
+uploaded_image = None
 
 
 """
@@ -155,10 +157,11 @@ def video_feed():
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_photo():
-    global uploaded_filename
+    global uploaded_image
     form = UploadForm()  # TODO: OK jpeg is here... but missing from request.form in query_image
     if form.validate_on_submit():
-        uploaded_filename = photos.save(form.photo.data)
+        #uploaded_filename = photos.save(form.photo.data)
+        uploaded_image = Image.open(form.photo.data.stream).convert('RGB')
         #file_url = photos.url(uploaded_filename)
         return redirect(url_for('query_image'))
     return render_template('upload.html', form=form)
@@ -200,9 +203,9 @@ def query_image():
         indices, _ = list(zip(*query_results))
 
         retrieval_img_path = get_retrieval_plot(indices, entities, debug_mode=DEBUG_WITH_PREDS)
-    elif uploaded_filename is not None:  # uploaded photo
-        img = Image.open(os.path.join('./static/cache', uploaded_filename)).convert('RGB')
-        query_img_path, ids = process_image(img)
+    elif uploaded_image is not None:  # uploaded photo
+        #img = Image.open(os.path.join('./static/cache', uploaded_filename)).convert('RGB')
+        query_img_path, ids = process_image(uploaded_image)
         uploaded_filename = None
     else:  # take photo
 
