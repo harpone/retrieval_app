@@ -6,9 +6,10 @@
     + https://www.pythonanywhere.com/forums/topic/5017/
     + https://github.com/AnandVetcha/Flask_App/blob/master/templates/output.html
 + support PNG etc input
-- nice HTML pages: 
+- nice HTML pages:
+  + use nicer styles
   - drag & drop or click to upload photo on landing page
-  - ditch webcam for now, but think how to implement
+  + ditch webcam for now, but think how to implement
 - use domain neohuman.one
 - use https
 - render output as HTML, not matplotlib figure; maybe a flashing point at the item location
