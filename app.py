@@ -21,7 +21,7 @@ from core.augs import load_augs
 from core.config import RESIZE_TO, N_RETRIEVED_RESULTS
 from core.utils import get_query_plot, get_retrieval_plot, delete_plot_cache
 
-DEBUGGING_WITHOUT_MODEL = False  # TODO: not up to date (loads a npz file instead of dict)
+DEBUGGING_WITHOUT_MODEL = False
 DEBUG_WITH_PREDS = False  # will show image, item preds in plots
 
 # TODO: could be a bad idea using locals in the first place... multiprocessing could get these confused?
@@ -131,18 +131,14 @@ def generate_feed():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    # if 'stop' in request.form:
-    #     print('Taking picture...')
-    #     return redirect(url_for('query_image'))
-    # elif 'start' in request.form:
-    #     print('Starting video feed...')
-    #     return redirect(url_for('show_feed'))
-    # elif 'upload' in request.form:
-    #     print('Going to upload page...')
-    #     return redirect(url_for('upload_photo'))
-    # else:
-    #     return render_template('index.html')
-    return redirect(url_for('upload_photo'))
+    global uploaded_image
+    form = UploadForm()  # TODO: OK jpeg is here... but missing from request.form in query_image
+    if form.validate_on_submit():
+        #uploaded_filename = photos.save(form.photo.data)
+        uploaded_image = Image.open(form.photo.data.stream).convert('RGB')
+        #file_url = photos.url(uploaded_filename)
+        return redirect(url_for('query_image'))
+    return render_template('index.html', form=form)
 
 
 @app.route('/show_feed')
