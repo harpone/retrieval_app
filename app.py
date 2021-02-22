@@ -127,17 +127,18 @@ def generate_feed():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    if 'stop' in request.form:
-        print('Taking picture...')
-        return redirect(url_for('query_image'))
-    elif 'start' in request.form:
-        print('Starting video feed...')
-        return redirect(url_for('show_feed'))
-    elif 'upload' in request.form:
-        print('Going to upload page...')
-        return redirect(url_for('upload_photo'))
-    else:
-        return render_template('index.html')
+    # if 'stop' in request.form:
+    #     print('Taking picture...')
+    #     return redirect(url_for('query_image'))
+    # elif 'start' in request.form:
+    #     print('Starting video feed...')
+    #     return redirect(url_for('show_feed'))
+    # elif 'upload' in request.form:
+    #     print('Going to upload page...')
+    #     return redirect(url_for('upload_photo'))
+    # else:
+    #     return render_template('index.html')
+    return redirect(url_for('upload_photo'))
 
 
 @app.route('/show_feed')
@@ -205,16 +206,16 @@ def query_image():
         retrieval_img_path = get_retrieval_plot(indices, entities, debug_mode=DEBUG_WITH_PREDS)
     elif uploaded_image is not None:  # uploaded photo
         #img = Image.open(os.path.join('./static/cache', uploaded_filename)).convert('RGB')
-        query_img_path, ids = process_image(uploaded_image)
+        query_img_base64, ids = process_image(uploaded_image)
         uploaded_filename = None
     else:  # take photo
 
         img = get_numpy_frame()  # take photo; [480, 640, 3] uint8 by default
         img = Image.fromarray(img)
-        query_img_path, ids = process_image(img)
+        query_img_base64, ids = process_image(img)
 
     return render_template('query_image.html',
-                           query_img_path=query_img_path,
+                           query_img=query_img_base64,
                            ids=ids,
                            retrieval_img_path=retrieval_img_path)
 
@@ -246,14 +247,14 @@ def process_image(img_):
             img_)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
 
     # bake in the segmentations to the PIL image:
-    query_img_path = get_query_plot(img_, img_aug, RESULTS, debug_mode=DEBUG_WITH_PREDS)
+    query_img_base64 = get_query_plot(img_, img_aug, RESULTS, debug_mode=DEBUG_WITH_PREDS)
 
     # entity ids for HTML:
     labels = ['Image']
     labels += [str(i + 1) for i in range(len(RESULTS.keys()) - 1)]
     ids = {label: 'entity_' + str(num) for label, num in zip(labels, np.arange(len(labels)))}
 
-    return query_img_path, ids
+    return query_img_base64, ids
 
 
 @app.route('/<int:idx>')
