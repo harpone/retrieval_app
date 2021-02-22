@@ -1,19 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <title>Demo</title>
-  </head>
-  <body>
-  Image retrieval demo. Click "Upload photo".
-  <br>
-  {#
-  <form method="post" action="/">
-      <input type="submit" name="start" value="Open camera">
-  </form>
-  #}
-  <form method="post" action="/">
-      <input type="submit" name="upload" value="Upload photo">
-  </form>
-  </body>
-<br>
+{% extends 'base.html' %}
 
+{% block content %}
+<title>Upload File</title>
+<h4>Please use images less than 2MB in size.</h4>
+<form method="POST" enctype="multipart/form-data">
+     {{ form.hidden_tag() }}
+     {{ form.photo }}
+     {% for error in form.photo.errors %}
+         <span style="color: red;">{{ error }}</span>
+     {% endfor %}
+     {{ form.submit }}
+</form>
+{% endblock %}
