@@ -42,8 +42,17 @@ TODO:
 app = Flask(__name__)
 #app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
 app.config.from_pyfile('configs/appconfig.py')
-app.config['UPLOADED_PHOTOS_DEST'] = './static/cache'
+app.config.update(
+    UPLOADED_PHOTOS_DEST='./static/cache',
+    UPLOADED_PATH='./static/cache',
+    # Flask-Dropzone config:
+    DROPZONE_ALLOWED_FILE_TYPE='image',
+    DROPZONE_MAX_FILE_SIZE=2,
+    DROPZONE_MAX_FILES=1,
+    DROPZONE_REDIRECT_VIEW='query_image'  # set redirect view
+)
 bootstrap = Bootstrap(app)
+dropzone = Dropzone(app)
 
 
 photos = UploadSet('photos', IMAGES)
@@ -132,13 +141,11 @@ def generate_feed():
 @app.route('/', methods=['GET', 'POST'])
 def index():
     global uploaded_image
-    form = UploadForm()  # TODO: OK jpeg is here... but missing from request.form in query_image
-    if form.validate_on_submit():
-        #uploaded_filename = photos.save(form.photo.data)
-        uploaded_image = Image.open(form.photo.data.stream).convert('RGB')
-        #file_url = photos.url(uploaded_filename)
-        return redirect(url_for('query_image'))
-    return render_template('index.html', form=form)
+    if request.method == 'POST':
+        f = request.files.get('file')
+        uploaded_image = Image.open(f).convert('RGB')
+        #return redirect(url_for('query_image'))  # don't redirect - flask-dropzone does that for some reason
+    return render_template('index.html')
 
 
 @app.route('/show_feed')
@@ -156,18 +163,6 @@ def video_feed():
     return Response(generate_feed(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
-@app.route('/upload', methods=['GET', 'POST'])
-def upload_photo():
-    global uploaded_image
-    form = UploadForm()  # TODO: OK jpeg is here... but missing from request.form in query_image
-    if form.validate_on_submit():
-        #uploaded_filename = photos.save(form.photo.data)
-        uploaded_image = Image.open(form.photo.data.stream).convert('RGB')
-        #file_url = photos.url(uploaded_filename)
-        return redirect(url_for('query_image'))
-    return render_template('upload.html', form=form)
-
-
 @app.route('/query_image', methods=['GET', 'POST'])
 def query_image():
 
@@ -175,7 +170,7 @@ def query_image():
     global query_img_path
     global retrieval_img_path
     global ids
-    global uploaded_filename
+    global uploaded_image
 
     if 'back' in request.form:
         delete_plot_cache()
@@ -183,17 +178,7 @@ def query_image():
         query_img_path = None
         retrieval_img_path = None
         ids = None
-        uploaded_filename = None
         return redirect(url_for('index'))
-    elif 'restart' in request.form:
-        delete_plot_cache()
-        print('Starting video feed...')
-        RESULTS = None
-        query_img_path = None
-        retrieval_img_path = None
-        ids = None
-        uploaded_filename = None
-        return redirect(url_for('show_feed'))
     elif any(['entity' in key for key in request.form.keys()]):  # query entities or entire image
         item_id = eval(list(request.form.keys())[0].split('_')[-1])  # TODO: check that getting correct value!
         #code, h_center, w_center, pred, isthing, seg_mask = RESULTS[item_id]
@@ -207,13 +192,7 @@ def query_image():
     elif uploaded_image is not None:  # uploaded photo
         #img = Image.open(os.path.join('./static/cache', uploaded_filename)).convert('RGB')
         query_img_base64, ids = process_image(uploaded_image)
-        uploaded_filename = None
-    else:  # take photo
-
-        img = get_numpy_frame()  # take photo; [480, 640, 3] uint8 by default
-        img = Image.fromarray(img)
-        query_img_base64, ids = process_image(img)
-
+        uploaded_image = None
     return render_template('query_image.html',
                            query_img=query_img_base64,
                            ids=ids,
