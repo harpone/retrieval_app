@@ -75,14 +75,15 @@ print(colored('Video capture device initialized', 'green'))
 # Set up database:  # TODO: protect codes and index! Needs refactoring!! Actually maybe
 #database_name = 'open-images-dataset-train0_0_475000.h5'  # TODO: as arg maybe
 #database_name = 'db_jan_2021b.h5'  # newest
-database_name = 'db_dec_2020.h5'  # for local debugging  # TODO!!!
+database_name = 'dev_db.h5'  # for local dev & debugging
 database_root = '/home/heka/model_data'
 database = Database(database_name, data_root=database_root, mode='r')
 codes = database.codes
 entities = database.table  # use .table for retrieval, table.row for insertion
 
 # Build index if one doesn't exist:
-index_path = '/home/heka/model_data/ngtpy_index'
+index_name = database_name.split('.')[0] + '_index'
+index_path = os.path.join('/home/heka/model_data', index_name)
 if not os.path.exists(index_path):
     print(colored('Creating NGTPY index for the first time. '
                   'This can take a while (around 1s per 10k objects)...', 'green'))
