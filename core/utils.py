@@ -4,6 +4,7 @@ import shutil
 import uuid
 from detectron2.data import MetadataCatalog
 import blosc
+import base64
 import pickle
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -74,7 +75,7 @@ def images_from_urls(urls, num_processes=None):
     if num_processes == 1:
         images = [image_from_url(url) for url in urls]
     elif num_processes is None:
-        # ctx = mp.get_context('spawn')  # TODO: still getting OSError: Cannot allocate memory!!! Something wrong with desktop?
+        # ctx = mp.get_context('spawn')  # TODO: still getting OSError: Cannot allocate memory!!!
         # with ctx.Pool() as pool:
         #     images = pool.map(image_from_url, urls)
         pool = mp.Pool()
@@ -281,11 +282,18 @@ def get_query_plot(img_orig, img_aug, results, debug_mode=False):
     scale = shape_orig.min() / shape_current.min()
     pad_amount = shape_orig.max() - int(scale * shape_current.max())
 
-    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-    img_np = np.array(img_orig)
-    ax.imshow(img_np)  # TODO: very large images => problems...
+    plt.gca().set_axis_off()
+    #fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+    fig, ax = plt.subplots(1, 1)
+    plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+    plt.margins(0, 0)
     ax.set_xticks([])
     ax.set_yticks([])
+    plt.gca().xaxis.set_major_locator(plt.NullLocator())
+    plt.gca().yaxis.set_major_locator(plt.NullLocator())
+
+    img_np = np.array(img_orig)
+    ax.imshow(img_np)  # TODO: very large images => problems...
 
     seg_mask_canvas = None
     for key, vals in results.items():
@@ -330,18 +338,21 @@ def get_query_plot(img_orig, img_aug, results, debug_mode=False):
     seg_mask_canvas[seg_mask_canvas < 0.5] = np.nan  # nan is transparent
     ax.imshow(seg_mask_canvas, alpha=.3, cmap='hsv', norm=None)  # if is_thing else None
 
-    # make bytesIO:
-    #buf = io.BytesIO()
-    rnd_string = uuid.uuid1().hex[:16]  # need unique filename to avoid browser using cache
-    query_img_path = f'./static/cache/query_img_{rnd_string}.jpg'
-    os.makedirs('./static/cache/', exist_ok=True)
-    fig.savefig(query_img_path, format='jpg', bbox_inches='tight', pad_inches=0)
-    query_img_path = query_img_path[2:]  # need this for teh HTML
+    #rnd_string = uuid.uuid1().hex[:16]  # need unique filename to avoid browser using cache
+    #query_img_path = f'./static/cache/query_img_{rnd_string}.jpg'
+    #os.makedirs('./static/cache/', exist_ok=True)
+    #fig.savefig(query_img_path, format='jpg', bbox_inches='tight', pad_inches=0)
+    #query_img_path = query_img_path[2:]  # need this for teh HTML
     # buf.seek(0)
     # if encode_for_html:
     #     buf = base64.b64encode(buf.getvalue()).decode('ascii')
 
-    return query_img_path
+    # make bytesIO:
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0)
+    buf.seek(0)
+    query_img_base64 = base64.b64encode(buf.getvalue()).decode('ascii')
+    return query_img_base64
 
 
 def get_retrieval_plot(indices, entities, debug_mode=False):
