@@ -24,13 +24,14 @@ from core.utils import get_query_plot, get_retrieval_plot, delete_plot_cache
 DEBUGGING_WITHOUT_MODEL = False
 DEBUG_WITH_PREDS = False  # will show image, item preds in plots
 
-# TODO: could be a bad idea using locals in the first place... multiprocessing could get these confused?
+# TODO: could be a bad idea using locals in the first place... multiprocessing could get these confused? Use cookies etc?
 RESULTS = None
 query_img_path = None
 retrieval_img_path = None  # not yet retrieved
 ids = None
 #uploaded_filename = None
 uploaded_image = None
+query_img_base64 = None
 
 
 """
@@ -172,6 +173,7 @@ def query_image():
     global retrieval_img_path
     global ids
     global uploaded_image
+    global query_img_base64
 
     if 'back' in request.form:
         delete_plot_cache()
