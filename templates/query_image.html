@@ -1,13 +1,7 @@
-<!DOCTYPE html>
 {% extends 'base.html' %}
 
 {% block content %}
-<html lang="en">
-    <head>
-        <title>Title</title>
-        <p1>Click "Image" to search for similar images or a number to search for similar things.</p1>
-    </head>
-    <body>
+    <p1>Click "Image" to search for similar images or a number to search for similar things.</p1>
     <style>
         img {
             width: 50%;
@@ -16,9 +10,9 @@
         }
         </style>
     <form class="form-inline" method="post" action="/query_image">
-        <input type="submit" name="back" value="Back">
+        <button type="submit" name="back" class="btn btn-sm btn-primary">Back</button> &nbsp;
         {% for label, num in ids.items() %}
-            <input type="submit" name={{ num }} value={{ label }}>
+            <button type="submit" name={{ num }} class="btn btn-sm btn-primary">{{ label }}</button> &nbsp;
         {% endfor %}
       </form>
     <div class="img">
@@ -27,7 +21,6 @@
     <div class="img-box">
         <img src="{{ retrieval_img_path }}" alt=""/>
     </div>
-    </body>
 
 </html>
 {% endblock %}
