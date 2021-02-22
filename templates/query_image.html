@@ -1,8 +1,11 @@
 <!DOCTYPE html>
+{% extends 'base.html' %}
+
+{% block content %}
 <html lang="en">
     <head>
         <title>Title</title>
-        <h1>Click "Image" to search for similar images or a number to search for similar things.</h1>
+        <h3>Click "Image" to search for similar images or a number to search for similar things.</h3>
 
     </head>
     <body>
@@ -14,8 +17,7 @@
         }
         </style>
     <form class="form-inline" method="post" action="/query_image">
-        <input type="submit" name="home" value="Home">
-        <input type="submit" name="restart" value="Retake">
+        <input type="submit" name="back" value="Back">
         {% for label, num in ids.items() %}
             <input type="submit" name={{ num }} value={{ label }}>
         {% endfor %}
@@ -29,3 +31,4 @@
     </body>
 
 </html>
+{% endblock %}

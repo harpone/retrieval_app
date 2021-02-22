@@ -1,8 +1,9 @@
-<!-- create a folder named templates, put this file into it -->
 <!DOCTYPE html>
+{% extends 'base.html' %}
+
+{% block content %}
 <title>Upload File</title>
-<h1>Neohuman Visual Search Demo</h1>
-<h2>Please use images less than 2MB in size.</h2>
+<h4>Please use images less than 2MB in size.</h4>
 <form method="POST" enctype="multipart/form-data">
      {{ form.hidden_tag() }}
      {{ form.photo }}
@@ -11,3 +12,4 @@
      {% endfor %}
      {{ form.submit }}
 </form>
+{% endblock %}

@@ -11,6 +11,8 @@ from termcolor import colored
 from PIL import Image
 from waitress import serve
 import ngtpy
+from flask_bootstrap import Bootstrap
+from flask_dropzone import Dropzone
 
 
 from core.dataio import Database
@@ -41,6 +43,8 @@ app = Flask(__name__)
 #app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
 app.config.from_pyfile('configs/appconfig.py')
 app.config['UPLOADED_PHOTOS_DEST'] = './static/cache'
+bootstrap = Bootstrap(app)
+
 
 photos = UploadSet('photos', IMAGES)
 configure_uploads(app, photos)
@@ -177,7 +181,7 @@ def query_image():
     global ids
     global uploaded_filename
 
-    if 'home' in request.form:
+    if 'back' in request.form:
         delete_plot_cache()
         RESULTS = None
         query_img_path = None
@@ -218,6 +222,11 @@ def query_image():
                            query_img=query_img_base64,
                            ids=ids,
                            retrieval_img_path=retrieval_img_path)
+
+
+@app.route('/about', methods=['GET'])
+def about():
+    return render_template('about.html')
 
 
 def process_image(img_):
