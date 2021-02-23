@@ -2,6 +2,7 @@ import io
 import os
 import shutil
 import uuid
+import io
 from detectron2.data import MetadataCatalog
 import blosc
 import base64
@@ -47,9 +48,17 @@ except ImportError:
     print('Some dependencies not imported...')
 
 
+def pil2base64(img):
+    buf = io.BytesIO()
+    img.save(buf, format='png', bbox_inches='tight', pad_inches=0, transparent=True)
+    buf.seek(0)
+    img_bytes = buf.read()
+    img_base64 = base64.b64encode(img_bytes).decode('ascii')
+    return img_base64
+
+
 def fig2base64(fig):
     """Convert a Matplotlib figure to a PIL Image"""
-    import io
     buf = io.BytesIO()
     fig.savefig(buf, format='png', bbox_inches='tight', pad_inches=0, transparent=True)
     buf.seek(0)
@@ -414,8 +423,9 @@ def get_retrieval_plot(indices, entities):
                 ax.scatter(w_center * w, h_center * h, s=0.15 * w, c='r', marker='o', alpha=0.4)
 
             img_base64 = fig2base64(fig)  # back to PIL
-        else:
-            img_base64 = None  # TODO: handle this! Maybe placeholder missing image?
+        else:  # load "image missing" image
+            img = Image.open('./static/images/no-photo.jpg')
+            img_base64 = pil2base64(img)  # TODO: handle this! Maybe placeholder missing image?
 
         images_with_markers.append(img_base64)
 

@@ -12,7 +12,7 @@
   + ditch webcam for now, but think how to implement
 + need dev db & index - index paired with db name
 + render output as HTML, not matplotlib figure; maybe a flashing point at the item location
-- link to original url for each retrieved example
++ link to original url for each retrieved example
 - use domain neohuman.one
 - use https
 - get rid of global variables with maybe a Result class or session or whatever
