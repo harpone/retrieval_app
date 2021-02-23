@@ -24,10 +24,10 @@ from core.utils import get_query_plot, get_retrieval_plot, delete_plot_cache
 DEBUGGING_WITHOUT_MODEL = False
 DEBUG_WITH_PREDS = False  # will show image, item preds in plots
 
-# TODO: could be a bad idea using locals in the first place... multiprocessing could get these confused? Use cookies etc?
+# TODO: could be a bad idea using locals in the first place...
 RESULTS = None
 query_img_path = None
-retrieval_img_path = None  # not yet retrieved
+images_with_markers = []  # not yet retrieved
 ids = None
 #uploaded_filename = None
 uploaded_image = None
@@ -170,7 +170,7 @@ def query_image():
 
     global RESULTS
     global query_img_path
-    global retrieval_img_path
+    global images_with_markers
     global ids
     global uploaded_image
     global query_img_base64
@@ -191,7 +191,7 @@ def query_image():
         query_results = ngtpy_index.search(img_meta['code'], N_RETRIEVED_RESULTS)
         indices, _ = list(zip(*query_results))
 
-        retrieval_img_path = get_retrieval_plot(indices, entities, debug_mode=DEBUG_WITH_PREDS)
+        images_with_markers = get_retrieval_plot(indices, entities)
     elif uploaded_image is not None:  # uploaded photo
         #img = Image.open(os.path.join('./static/cache', uploaded_filename)).convert('RGB')
         query_img_base64, ids = process_image(uploaded_image)
@@ -199,7 +199,7 @@ def query_image():
     return render_template('query_image.html',
                            query_img=query_img_base64,
                            ids=ids,
-                           retrieval_img_path=retrieval_img_path)
+                           images_with_markers=images_with_markers)
 
 
 @app.route('/about', methods=['GET'])

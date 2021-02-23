@@ -8,6 +8,7 @@ import base64
 import pickle
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from matplotlib.offsetbox import AnchoredText
 #from multiprocessing import set_start_method, Pool
 import multiprocessing as mp
 import numpy as np
@@ -46,14 +47,14 @@ except ImportError:
     print('Some dependencies not imported...')
 
 
-def fig2pil(fig):
+def fig2base64(fig):
     """Convert a Matplotlib figure to a PIL Image"""
     import io
     buf = io.BytesIO()
-    fig.savefig(buf, transparent=True, pad_inches=0, bbox_inches='tight')
+    fig.savefig(buf, format='png', bbox_inches='tight', pad_inches=0, transparent=True)
     buf.seek(0)
-    img = Image.open(buf).convert('RGB')
-    return img
+    img_base64 = base64.b64encode(buf.getvalue()).decode('ascii')
+    return img_base64
 
 
 def image_from_url(url):
@@ -365,9 +366,17 @@ def get_query_plot(img_orig, img_aug, results, debug_mode=False):
     return query_img_base64
 
 
-def get_retrieval_plot(indices, entities, debug_mode=False):
-    # Get corresponding entities from database:  # TODO: refactor to get_retrieval_plot etc.
-    # 1) get all paths, download images to PIL in parallel
+def get_retrieval_plot(indices, entities):
+    """Draws a bullseye at item location, returns a list of base64 encoded images.
+
+    Args:
+        indices: tuple of integer indices pointing to the db entity
+        entities: all pytables entities
+
+    Returns:
+        images_with_markers [list]: list of base64 encoded images
+    """
+    # TODO: do some profiling and maybe improve speed
     urls = list()
     h_centers = list()
     w_centers = list()
@@ -384,53 +393,27 @@ def get_retrieval_plot(indices, entities, debug_mode=False):
 
     # draw centers on top of images:
     images_with_markers = list()
-    for img, h_center, w_center in zip(images_ret, h_centers, w_centers):
+    for num, (img, h_center, w_center) in enumerate(zip(images_ret, h_centers, w_centers)):
         img = np.array(img)
         h, w = img.shape[:-1]
 
         fig, ax = plt.subplots()
         plt.gca().set_axis_off()
         ax.imshow(img)
+
+        # draw rank on image:  # TODO: figure out nicer way to display ranking
+        prop = dict(size=0.02 * w, color='black', alpha=0.9, fontsize=0.02 * w)
+        at = AnchoredText(f"{num + 1}.", prop=prop, frameon=True, loc='upper left')
+        ax.add_artist(at)
+
         # draw "bullseye" on top of image:
-        ax.scatter(w_center * w, h_center * h, s=w, c='r', marker='o', alpha=0.5)
-        ax.scatter(w_center * w, h_center * h, s=0.5 * w, c='w', marker='o', alpha=0.5)
-        ax.scatter(w_center * w, h_center * h, s=0.15 * w, c='r', marker='o', alpha=0.4)
+        if h_center > 0 and w_center > 0:
+            ax.scatter(w_center * w, h_center * h, s=w, c='r', marker='o', alpha=0.5)
+            ax.scatter(w_center * w, h_center * h, s=0.5 * w, c='w', marker='o', alpha=0.5)
+            ax.scatter(w_center * w, h_center * h, s=0.15 * w, c='r', marker='o', alpha=0.4)
 
-        img = fig2pil(fig)  # back to PIL
-        images_with_markers.append(img)
-
-    # # 2) form 2 col, 3 row matplotlib plot with h_center, w_center scatter
-    # fig, ax = plt.subplots(N_RETRIEVED_RESULTS // 2, 2, figsize=(13, 13))
-    # for n in range(len(images_ret)):
-    #     try:
-    #         img_ret = images_ret[n]
-    #         img_ret = np.array(img_ret)
-    #         h, w = img_ret.shape[:-1]
-    #         h_center = h_centers[n]
-    #         w_center = w_centers[n]
-    #         pred_item = preds_item[n]
-    #         #is_thing = is_things[n]
-
-    #         i = n // 2
-    #         j = n % 2
-
-    #         ax[i, j].imshow(np.array(img_ret))
-    #         if h_center >= 0:
-    #             ax[i, j].scatter(w_center * w, h_center * h, s=500, c='r', marker='o', alpha=0.3)
-    #             if debug_mode:
-    #                 text_dict = dict(boxstyle="round", fc="white", ec="green")
-    #                 ax[i, j].annotate(pred_item, (w_center * w - 2, h_center * h + 2), bbox=text_dict)
-
-    #         ax[i, j].set_axis_off()
-    #     except IndexError:  # prolly None?
-    #         pass
-
-    # rnd_string = uuid.uuid1().hex[:16]  # need unique filename to avoid browser using cache
-    # retrieval_img_path = f'./static/cache/retrieval_img_{rnd_string}.jpg'
-    # os.makedirs('./static/cache/', exist_ok=True)
-    # plt.tight_layout()
-    # fig.savefig(retrieval_img_path, format='jpg', bbox_inches='tight', pad_inches=0)
-    # retrieval_img_path = retrieval_img_path[2:]
+        img_base64 = fig2base64(fig)  # back to PIL
+        images_with_markers.append(img_base64)
 
     return images_with_markers
 
