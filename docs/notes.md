@@ -11,8 +11,9 @@
   + drag & drop or click to upload photo on landing page
   + ditch webcam for now, but think how to implement
 + need dev db & index - index paired with db name
-- render output as HTML, not matplotlib figure; maybe a flashing point at the item location
++ render output as HTML, not matplotlib figure; maybe a flashing point at the item location
+- link to original url for each retrieved example
 - use domain neohuman.one
 - use https
-- link to original url for each retrieved example
 - get rid of global variables with maybe a Result class or session or whatever
+- placeholder missing image in get_retrieval_plot
