@@ -16,4 +16,8 @@
 - use domain neohuman.one
 - use https
 - get rid of global variables with maybe a Result class or session or whatever
-- placeholder missing image in get_retrieval_plot
++ placeholder missing image in get_retrieval_plot
+
+
+- loading an NGTPY index 5M images/ 25M items takes quite a while, about 3 mins...
+- also model takes a long time to load on K80 GPU, about 2 min - quite a bit faster on my GTX1080Ti
