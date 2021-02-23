@@ -15,12 +15,15 @@
             <button type="submit" name={{ num }} class="btn btn-sm btn-primary">{{ label }}</button> &nbsp;
         {% endfor %}
       </form>
+    
+    <section id="photos">
     <div class="img">
         <img src="data:image/png;base64,{{ query_img }}"/>
+        {% for image_ret in images_with_markers %}
+            <img src="data:image/png;base64,{{ image_ret }}" alt=""/>
+        {% endfor %}
     </div>
-    <div class="img-box">
-        <img src="{{ retrieval_img_path }}" alt=""/>
-    </div>
+    </section>
 
 </html>
 {% endblock %}
