@@ -394,28 +394,32 @@ def get_retrieval_plot(indices, entities):
     # draw centers on top of images:
     images_with_markers = list()
     for num, (img, h_center, w_center) in enumerate(zip(images_ret, h_centers, w_centers)):
-        img = np.array(img)
-        h, w = img.shape[:-1]
+        if img is not None:
+            img = np.array(img)
+            h, w = img.shape[:-1]
 
-        fig, ax = plt.subplots()
-        plt.gca().set_axis_off()
-        ax.imshow(img)
+            fig, ax = plt.subplots()
+            plt.gca().set_axis_off()
+            ax.imshow(img)
 
-        # draw rank on image:  # TODO: figure out nicer way to display ranking
-        prop = dict(size=0.02 * w, color='black', alpha=0.9, fontsize=0.02 * w)
-        at = AnchoredText(f"{num + 1}.", prop=prop, frameon=True, loc='upper left')
-        ax.add_artist(at)
+            # draw rank on image:  # TODO: figure out nicer way to display ranking
+            prop = dict(size=0.02 * w, color='black', alpha=0.9, fontsize=0.02 * w)
+            at = AnchoredText(f"{num + 1}.", prop=prop, frameon=True, loc='upper left')
+            ax.add_artist(at)
 
-        # draw "bullseye" on top of image:
-        if h_center > 0 and w_center > 0:
-            ax.scatter(w_center * w, h_center * h, s=w, c='r', marker='o', alpha=0.5)
-            ax.scatter(w_center * w, h_center * h, s=0.5 * w, c='w', marker='o', alpha=0.5)
-            ax.scatter(w_center * w, h_center * h, s=0.15 * w, c='r', marker='o', alpha=0.4)
+            # draw "bullseye" on top of image:
+            if h_center > 0 and w_center > 0:
+                ax.scatter(w_center * w, h_center * h, s=w, c='r', marker='o', alpha=0.5)
+                ax.scatter(w_center * w, h_center * h, s=0.5 * w, c='w', marker='o', alpha=0.5)
+                ax.scatter(w_center * w, h_center * h, s=0.15 * w, c='r', marker='o', alpha=0.4)
 
-        img_base64 = fig2base64(fig)  # back to PIL
+            img_base64 = fig2base64(fig)  # back to PIL
+        else:
+            img_base64 = None  # TODO: handle this! Maybe placeholder missing image?
+
         images_with_markers.append(img_base64)
 
-    return images_with_markers
+    return images_with_markers, urls
 
 
 def visualize_openimages(images, targets, heads_out, num_figs=1):
