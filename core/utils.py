@@ -46,11 +46,21 @@ except ImportError:
     print('Some dependencies not imported...')
 
 
+def fig2pil(fig):
+    """Convert a Matplotlib figure to a PIL Image"""
+    import io
+    buf = io.BytesIO()
+    fig.savefig(buf, transparent=True, pad_inches=0, bbox_inches='tight')
+    buf.seek(0)
+    img = Image.open(buf).convert('RGB')
+    return img
+
+
 def image_from_url(url):
     """Load image from `url`
 
     :param url: str
-    :return:
+    :return: PIL Image
     """
     try:
         r = requests.get(url, stream=True)
@@ -372,40 +382,57 @@ def get_retrieval_plot(indices, entities, debug_mode=False):
         is_things.append(entity['is_thing'])
     images_ret = images_from_urls(urls)
 
-    # 2) form 2 col, 3 row matplotlib plot with h_center, w_center scatter
-    fig, ax = plt.subplots(N_RETRIEVED_RESULTS // 2, 2, figsize=(13, 13))
-    for n in range(len(images_ret)):
-        try:
-            img_ret = images_ret[n]
-            img_ret = np.array(img_ret)
-            h, w = img_ret.shape[:-1]
-            h_center = h_centers[n]
-            w_center = w_centers[n]
-            pred_item = preds_item[n]
-            #is_thing = is_things[n]
+    # draw centers on top of images:
+    images_with_markers = list()
+    for img, h_center, w_center in zip(images_ret, h_centers, w_centers):
+        img = np.array(img)
+        h, w = img.shape[:-1]
 
-            i = n // 2
-            j = n % 2
+        fig, ax = plt.subplots()
+        plt.gca().set_axis_off()
+        ax.imshow(img)
+        # draw "bullseye" on top of image:
+        ax.scatter(w_center * w, h_center * h, s=w, c='r', marker='o', alpha=0.5)
+        ax.scatter(w_center * w, h_center * h, s=0.5 * w, c='w', marker='o', alpha=0.5)
+        ax.scatter(w_center * w, h_center * h, s=0.15 * w, c='r', marker='o', alpha=0.4)
 
-            ax[i, j].imshow(np.array(img_ret))
-            if h_center >= 0:
-                ax[i, j].scatter(w_center * w, h_center * h, s=500, c='r', marker='o', alpha=0.3)
-                if debug_mode:
-                    text_dict = dict(boxstyle="round", fc="white", ec="green")
-                    ax[i, j].annotate(pred_item, (w_center * w - 2, h_center * h + 2), bbox=text_dict)
+        img = fig2pil(fig)  # back to PIL
+        images_with_markers.append(img)
 
-            ax[i, j].set_axis_off()
-        except ValueError:  # prolly None?
-            pass
+    # # 2) form 2 col, 3 row matplotlib plot with h_center, w_center scatter
+    # fig, ax = plt.subplots(N_RETRIEVED_RESULTS // 2, 2, figsize=(13, 13))
+    # for n in range(len(images_ret)):
+    #     try:
+    #         img_ret = images_ret[n]
+    #         img_ret = np.array(img_ret)
+    #         h, w = img_ret.shape[:-1]
+    #         h_center = h_centers[n]
+    #         w_center = w_centers[n]
+    #         pred_item = preds_item[n]
+    #         #is_thing = is_things[n]
 
-    rnd_string = uuid.uuid1().hex[:16]  # need unique filename to avoid browser using cache
-    retrieval_img_path = f'./static/cache/retrieval_img_{rnd_string}.jpg'
-    os.makedirs('./static/cache/', exist_ok=True)
-    plt.tight_layout()
-    fig.savefig(retrieval_img_path, format='jpg', bbox_inches='tight', pad_inches=0)
-    retrieval_img_path = retrieval_img_path[2:]
+    #         i = n // 2
+    #         j = n % 2
 
-    return retrieval_img_path
+    #         ax[i, j].imshow(np.array(img_ret))
+    #         if h_center >= 0:
+    #             ax[i, j].scatter(w_center * w, h_center * h, s=500, c='r', marker='o', alpha=0.3)
+    #             if debug_mode:
+    #                 text_dict = dict(boxstyle="round", fc="white", ec="green")
+    #                 ax[i, j].annotate(pred_item, (w_center * w - 2, h_center * h + 2), bbox=text_dict)
+
+    #         ax[i, j].set_axis_off()
+    #     except IndexError:  # prolly None?
+    #         pass
+
+    # rnd_string = uuid.uuid1().hex[:16]  # need unique filename to avoid browser using cache
+    # retrieval_img_path = f'./static/cache/retrieval_img_{rnd_string}.jpg'
+    # os.makedirs('./static/cache/', exist_ok=True)
+    # plt.tight_layout()
+    # fig.savefig(retrieval_img_path, format='jpg', bbox_inches='tight', pad_inches=0)
+    # retrieval_img_path = retrieval_img_path[2:]
+
+    return images_with_markers
 
 
 def visualize_openimages(images, targets, heads_out, num_figs=1):
