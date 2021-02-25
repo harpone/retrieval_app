@@ -19,7 +19,7 @@ from core.dataio import Database
 from core.models import SuperModel
 from core.augs import load_augs
 from core.config import RESIZE_TO, N_RETRIEVED_RESULTS
-from core.utils import get_query_plot, get_retrieval_plot, delete_plot_cache
+from core.utils import get_query_plot, get_retrieval_plot
 
 DEBUGGING_WITHOUT_MODEL = False
 DEBUG_WITH_PREDS = False  # will show image, item preds in plots
