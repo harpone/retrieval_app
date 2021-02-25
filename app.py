@@ -1,6 +1,9 @@
 import numpy as np
-from flask import Flask, render_template, request, url_for, redirect, Response, flash
+from flask import Flask, render_template, request, url_for, redirect, Response, flash, session
 from flask_uploads import UploadSet, configure_uploads, IMAGES, patch_request_class
+from flask_session import Session
+from flask_bootstrap import Bootstrap
+from flask_dropzone import Dropzone
 from werkzeug.exceptions import abort
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
@@ -11,9 +14,6 @@ from termcolor import colored
 from PIL import Image
 from waitress import serve
 import ngtpy
-from flask_bootstrap import Bootstrap
-from flask_dropzone import Dropzone
-
 
 from core.dataio import Database
 from core.models import SuperModel
@@ -23,7 +23,7 @@ from core.utils import get_query_plot, get_retrieval_plot, delete_plot_cache
 
 DEBUGGING_WITHOUT_MODEL = False
 DEBUG_WITH_PREDS = False  # will show image, item preds in plots
-USE_DEV_DB = False
+USE_DEV_DB = True
 
 # Set up database:  # TODO: protect codes and index! Needs refactoring!! Actually maybe
 #database_name = 'open-images-dataset-train0_0_475000.h5'  # TODO: as arg maybe
@@ -34,17 +34,6 @@ else:
 
 database_root = '/home/heka/model_data'
 
-# TODO: could be a bad idea using locals in the first place...
-RESULTS = None
-query_img_path = None
-images_ret = []  # not yet retrieved
-urls_ret = []
-ids = None
-#uploaded_filename = None
-uploaded_image = None
-query_img_base64 = None
-
-
 """
 TODO:
 - now debugging locally with old database!!!! Rebuild index - takes lots or RAM locally
@@ -53,6 +42,7 @@ TODO:
 
 app = Flask(__name__)
 #app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
+SESSION_TYPE = 'filesystem'
 app.config.from_pyfile('configs/appconfig.py')
 app.config.update(
     UPLOADED_PHOTOS_DEST='./static/cache',
@@ -65,6 +55,18 @@ app.config.update(
 )
 bootstrap = Bootstrap(app)
 dropzone = Dropzone(app)
+Session(app)
+
+
+# initialize session:
+def reset_session():
+    session['results'] = None
+    session['query_img_path'] = None
+    session['images_ret'] = []
+    session['urls_ret'] = []
+    session['ids'] = None
+    session['uploaded_image'] = None
+    session['query_img_base64'] = None
 
 
 photos = UploadSet('photos', IMAGES)
@@ -78,7 +80,7 @@ class UploadForm(FlaskForm):
 
 
 # Delete cache folder:
-delete_plot_cache()
+#delete_plot_cache()
 
 # Set up video capture:
 videocap = cv2.VideoCapture(-1)
@@ -148,47 +150,22 @@ def generate_feed():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    global uploaded_image
+    reset_session()
     if request.method == 'POST':
         f = request.files.get('file')
         uploaded_image = Image.open(f).convert('RGB')
-        # TODO: if uploaded_image == None, raise error or flash message!
-        # return redirect(url_for('query_image'))  # don't redirect - flask-dropzone does that for some reason
+        if uploaded_image is None:
+            flash('Upload size exceeded! Please only use smaller than 10MB size images.')
+            redirect(url_for('index'))
+        session['uploaded_image'] = uploaded_image
     return render_template('index.html')
-
-
-@app.route('/show_feed')
-def show_feed():
-    if videocap.isOpened():
-        return render_template('show_feed.html')
-    else:
-        print('TRYING TO USE WEBCAM')
-        flash('Not implemented yet...')
-        return redirect(url_for('index'))
-
-
-@app.route('/video_feed')
-def video_feed():
-    return Response(generate_feed(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 @app.route('/query_image', methods=['GET', 'POST'])
 def query_image():
 
-    global RESULTS
-    global query_img_path
-    global images_ret
-    global urls_ret
-    global ids
-    global uploaded_image
-    global query_img_base64
-
     if 'back' in request.form:
-        delete_plot_cache()
-        RESULTS = None
-        query_img_path = None
-        retrieval_img_path = None
-        ids = None
+        reset_session()
         return redirect(url_for('index'))
     elif any(['entity' in key for key in request.form.keys()]):  # query entities or entire image
         item_id = eval(list(request.form.keys())[0].split('_')[-1])  # TODO: check that getting correct value!
@@ -200,10 +177,10 @@ def query_image():
         indices, _ = list(zip(*query_results))
 
         images_ret, urls_ret = get_retrieval_plot(indices, entities)
-    elif uploaded_image is not None:  # uploaded photo
-        #img = Image.open(os.path.join('./static/cache', uploaded_filename)).convert('RGB')
-        query_img_base64, ids = process_image(uploaded_image)
-        uploaded_image = None
+    elif session['uploaded_image'] is not None:  # uploaded photo
+        query_img_base64, ids = process_image(session['uploaded_image'])
+        session['query_img_base64'] = query_img_base64
+        session['ids'] = ids
     return render_template('query_image.html',
                            query_img=query_img_base64,
                            ids=ids,
@@ -238,8 +215,7 @@ def process_image(img_):
         results_load = np.load('supermodel_out.npz', allow_pickle=True)
         RESULTS = {int(key): results_load[key] for key in results_load.files}
     else:
-        RESULTS = supermodel(
-            img_)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
+        RESULTS = supermodel(img_)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
 
     # bake in the segmentations to the PIL image:
     query_img_base64 = get_query_plot(img_, img_aug, RESULTS, debug_mode=DEBUG_WITH_PREDS)
