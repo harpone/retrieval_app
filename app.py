@@ -26,8 +26,8 @@ DEBUG_WITH_PREDS = False  # will show image, item preds in plots
 
 # Set up database:  # TODO: protect codes and index! Needs refactoring!! Actually maybe
 #database_name = 'open-images-dataset-train0_0_475000.h5'  # TODO: as arg maybe
-#database_name = 'db_jan_2021b.h5'  # newest
-database_name = 'dev_db.h5'  # for local dev & debugging
+database_name = 'db_jan_2021b.h5'  # newest
+#database_name = 'dev_db.h5'  # for local dev & debugging
 database_root = '/home/heka/model_data'
 
 # TODO: could be a bad idea using locals in the first place...
