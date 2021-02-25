@@ -14,8 +14,7 @@
 + render output as HTML, not matplotlib figure; maybe a flashing point at the item location
 + link to original url for each retrieved example
 + use domain neohuman.one
-- get rid of global variables with maybe a Result class or session or whatever
-  - TODO: using flask-session but still seem to be process-unsafe... test on really different users
++ get rid of global variables with maybe a Result class or session or whatever
 + placeholder missing image in get_retrieval_plot
 + if uploaded_image == None, raise error or flash message! (exceeds 10MB upload limit)
 

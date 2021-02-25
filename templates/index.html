@@ -3,7 +3,6 @@
 
 {% block content %}
 <title>Upload File</title>
-<h4>Please use images less than 2MB in size.</h4>
 {{ dropzone.create(action='index') }}
 {{ dropzone.load_js() }}
 {{ dropzone.config() }}
