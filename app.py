@@ -51,7 +51,8 @@ app.config.update(
     DROPZONE_ALLOWED_FILE_TYPE='image',
     DROPZONE_MAX_FILE_SIZE=10,
     DROPZONE_MAX_FILES=1,
-    DROPZONE_REDIRECT_VIEW='query_image'  # set redirect view
+    DROPZONE_REDIRECT_VIEW='query_image',  # set redirect view
+    DROPZONE_DEFAULT_MESSAGE='DROP IMAGE FILE HERE OR CLICK TO UPLOAD'
 )
 
 bootstrap = Bootstrap(app)
@@ -217,7 +218,8 @@ def process_image(img_):
         results_load = np.load('supermodel_out.npz', allow_pickle=True)
         session['results'] = {int(key): results_load[key] for key in results_load.files}
     else:
-        session['results'] = supermodel(img_)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
+        # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
+        session['results'] = supermodel(img_)
 
     # bake in the segmentations to the PIL image:
     query_img_base64 = get_query_plot(img_, img_aug, session['results'], debug_mode=DEBUG_WITH_PREDS)
