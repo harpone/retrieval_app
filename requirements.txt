@@ -22,3 +22,4 @@ google-cloud-storage
 waitress
 flask-bootstrap
 flask-dropzone
+Flask-Session

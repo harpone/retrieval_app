@@ -23,11 +23,15 @@ from core.utils import get_query_plot, get_retrieval_plot, delete_plot_cache
 
 DEBUGGING_WITHOUT_MODEL = False
 DEBUG_WITH_PREDS = False  # will show image, item preds in plots
+USE_DEV_DB = False
 
 # Set up database:  # TODO: protect codes and index! Needs refactoring!! Actually maybe
 #database_name = 'open-images-dataset-train0_0_475000.h5'  # TODO: as arg maybe
-database_name = 'db_jan_2021b.h5'  # newest
-#database_name = 'dev_db.h5'  # for local dev & debugging
+if USE_DEV_DB:
+    database_name = 'dev_db.h5'  # for local dev & debugging
+else:
+    database_name = 'db_jan_2021b.h5'  # newest
+
 database_root = '/home/heka/model_data'
 
 # TODO: could be a bad idea using locals in the first place...
@@ -55,7 +59,7 @@ app.config.update(
     UPLOADED_PATH='./static/cache',
     # Flask-Dropzone config:
     DROPZONE_ALLOWED_FILE_TYPE='image',
-    DROPZONE_MAX_FILE_SIZE=2,
+    DROPZONE_MAX_FILE_SIZE=10,
     DROPZONE_MAX_FILES=1,
     DROPZONE_REDIRECT_VIEW='query_image'  # set redirect view
 )
@@ -148,7 +152,8 @@ def index():
     if request.method == 'POST':
         f = request.files.get('file')
         uploaded_image = Image.open(f).convert('RGB')
-        #return redirect(url_for('query_image'))  # don't redirect - flask-dropzone does that for some reason
+        # TODO: if uploaded_image == None, raise error or flash message!
+        # return redirect(url_for('query_image'))  # don't redirect - flask-dropzone does that for some reason
     return render_template('index.html')
 
 
