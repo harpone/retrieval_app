@@ -13,11 +13,13 @@
 + need dev db & index - index paired with db name
 + render output as HTML, not matplotlib figure; maybe a flashing point at the item location
 + link to original url for each retrieved example
-- use domain neohuman.one
-- use https
++ use domain neohuman.one
 - get rid of global variables with maybe a Result class or session or whatever
+  - TODO: using flask-session but still seem to be process-unsafe... test on really different users
 + placeholder missing image in get_retrieval_plot
++ if uploaded_image == None, raise error or flash message! (exceeds 10MB upload limit)
 
 
 - loading an NGTPY index 5M images/ 25M items takes quite a while, about 3 mins...
 - also model takes a long time to load on K80 GPU, about 2 min - quite a bit faster on my GTX1080Ti
+- maybe use https

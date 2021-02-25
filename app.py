@@ -1,5 +1,5 @@
 import numpy as np
-from flask import Flask, render_template, request, url_for, redirect, Response, flash, session
+from flask import Flask, render_template, request, url_for, redirect, flash, session
 from flask_uploads import UploadSet, configure_uploads, IMAGES, patch_request_class
 from flask_session import Session
 from flask_bootstrap import Bootstrap
@@ -42,9 +42,9 @@ TODO:
 
 app = Flask(__name__)
 #app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
-SESSION_TYPE = 'filesystem'
-app.config.from_pyfile('configs/appconfig.py')
+app.config.from_pyfile('configs/appconfig.py')  # TODO:
 app.config.update(
+    SESSION_TYPE='filesystem',
     UPLOADED_PHOTOS_DEST='./static/cache',
     UPLOADED_PATH='./static/cache',
     # Flask-Dropzone config:
@@ -53,6 +53,7 @@ app.config.update(
     DROPZONE_MAX_FILES=1,
     DROPZONE_REDIRECT_VIEW='query_image'  # set redirect view
 )
+
 bootstrap = Bootstrap(app)
 dropzone = Dropzone(app)
 Session(app)
@@ -64,7 +65,7 @@ def reset_session():
     session['query_img_path'] = None
     session['images_ret'] = []
     session['urls_ret'] = []
-    session['ids'] = None
+    session['ids'] = dict()
     session['uploaded_image'] = None
     session['query_img_base64'] = None
 
@@ -170,21 +171,23 @@ def query_image():
     elif any(['entity' in key for key in request.form.keys()]):  # query entities or entire image
         item_id = eval(list(request.form.keys())[0].split('_')[-1])  # TODO: check that getting correct value!
         #code, h_center, w_center, pred, isthing, seg_mask = RESULTS[item_id]
-        img_meta = RESULTS[item_id]
+        img_meta = session['results'][item_id]
 
         # Search for nns:
         query_results = ngtpy_index.search(img_meta['code'], N_RETRIEVED_RESULTS)
         indices, _ = list(zip(*query_results))
 
         images_ret, urls_ret = get_retrieval_plot(indices, entities)
+        session['images_ret'] = images_ret
+        session['urls_ret'] = urls_ret
     elif session['uploaded_image'] is not None:  # uploaded photo
         query_img_base64, ids = process_image(session['uploaded_image'])
         session['query_img_base64'] = query_img_base64
         session['ids'] = ids
     return render_template('query_image.html',
-                           query_img=query_img_base64,
-                           ids=ids,
-                           images_urls=zip(images_ret, urls_ret))
+                           query_img=session['query_img_base64'],
+                           ids=session['ids'],
+                           images_urls=zip(session['images_ret'], session['urls_ret']))
 
 
 @app.route('/about', methods=['GET'])
@@ -198,7 +201,6 @@ def process_image(img_):
     :param img_: PIL Image
     :return:
     """
-    global RESULTS
 
     # Resize if image is huge:
     size_overflow = np.max(img_.size) / 1024
@@ -213,16 +215,16 @@ def process_image(img_):
     # supermodel out:
     if DEBUGGING_WITHOUT_MODEL:  # debugging
         results_load = np.load('supermodel_out.npz', allow_pickle=True)
-        RESULTS = {int(key): results_load[key] for key in results_load.files}
+        session['results'] = {int(key): results_load[key] for key in results_load.files}
     else:
-        RESULTS = supermodel(img_)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
+        session['results'] = supermodel(img_)  # dict with items [code, h_center, w_center, pred, isthing, seg_mask]; 0 is global
 
     # bake in the segmentations to the PIL image:
-    query_img_base64 = get_query_plot(img_, img_aug, RESULTS, debug_mode=DEBUG_WITH_PREDS)
+    query_img_base64 = get_query_plot(img_, img_aug, session['results'], debug_mode=DEBUG_WITH_PREDS)
 
     # entity ids for HTML:
     labels = ['Image']
-    labels += [str(i + 1) for i in range(len(RESULTS.keys()) - 1)]
+    labels += [str(i + 1) for i in range(len(session['results'].keys()) - 1)]
     ids = {label: 'entity_' + str(num) for label, num in zip(labels, np.arange(len(labels)))}
 
     return query_img_base64, ids
