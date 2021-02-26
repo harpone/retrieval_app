@@ -8,6 +8,7 @@ from werkzeug.exceptions import abort
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import SubmitField
+import time
 import os
 import cv2
 from termcolor import colored
@@ -52,6 +53,7 @@ app.config.update(
     DROPZONE_MAX_FILE_SIZE=10,
     DROPZONE_MAX_FILES=1,
     DROPZONE_REDIRECT_VIEW='query_image',  # set redirect view
+    #DROPZONE_REDIRECT_VIEW=None,
     DROPZONE_DEFAULT_MESSAGE='DROP IMAGE FILE HERE OR CLICK TO UPLOAD'
 )
 
@@ -161,11 +163,10 @@ def index():
         query_img_base64, ids = process_image(uploaded_image)
         session['query_img_base64'] = query_img_base64
         session['ids'] = ids
-
-        if session['query_img_base64'] is None:
-            raise ValueError('WTF IT*S NONE"!!!')
+        # TODO: OK session['query_img_base64'] not set before fucking dropzone redirect... how do I wait until upload finished?
         #session['uploaded_image'] = uploaded_image
         # will redirect to query_image here because of dropzone
+        #return redirect(url_for('query_image'))  # not needed with dropzone!!
     return render_template('index.html')
 
 
@@ -192,7 +193,9 @@ def query_image():
     #     session['query_img_base64'] = query_img_base64
     #     session['ids'] = ids
     if session['query_img_base64'] is None:
-        raise ValueError('WTF IT*S NONE right before display!!!')
+        #raise ValueError('WTF IT*S NONE right before display!!!')
+        print('Sleeping for 10 seconds...')
+        time.sleep(10)
     return render_template('query_image.html',
                            query_img=session['query_img_base64'],
                            ids=session['ids'],
@@ -231,10 +234,6 @@ def process_image(img_):
 
     # bake in the segmentations to the PIL image:
     query_img_base64 = get_query_plot(img_, img_aug, session['results'], debug_mode=DEBUG_WITH_PREDS)
-
-    # try to catch weird None error:
-    if query_img_base64 is None:
-        raise ValueError('WTF query image is None!')
 
     # entity ids for HTML:
     labels = ['Image']
