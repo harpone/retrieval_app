@@ -9,6 +9,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import SubmitField
 import time
+from copy import deepcopy
 import os
 import cv2
 from termcolor import colored
@@ -34,12 +35,6 @@ else:
     database_name = 'db_jan_2021b.h5'  # newest
 
 database_root = '/home/heka/model_data'
-
-"""
-TODO:
-- now debugging locally with old database!!!! Rebuild index - takes lots or RAM locally
-- build small dev db/index
-"""
 
 app = Flask(__name__)
 #app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
@@ -70,6 +65,7 @@ def reset_session():
     session['urls_ret'] = []
     session['ids'] = dict()
     session['query_img_base64'] = None
+    session['filename'] = None
 
 
 photos = UploadSet('photos', IMAGES)
@@ -155,14 +151,17 @@ def generate_feed():
 def index():
     reset_session()
     if request.method == 'POST':
-        f = request.files.get('file')
-        uploaded_image = Image.open(f).convert('RGB')
-        if uploaded_image is None:
-            flash('Upload size exceeded! Please only use smaller than 10MB size images.')
-            redirect(url_for('index'))
-        query_img_base64, ids = process_image(uploaded_image)
-        session['query_img_base64'] = query_img_base64
-        session['ids'] = ids
+        f = request.files.get('file')  # hmm OK redirects right after this so no time to process the stuff below??
+        #session['f'] = deepcopy(f)
+        session['filename'] = f.filename
+        f.save(os.path.join(app.config['UPLOADED_PATH'], session['filename']))
+        #uploaded_image = Image.open(f).convert('RGB')
+        # if uploaded_image is None:
+        #     flash('Upload size exceeded! Please only use smaller than 10MB size images.')
+        #     redirect(url_for('index'))
+        #query_img_base64, ids = process_image(uploaded_image)
+        #session['query_img_base64'] = query_img_base64
+        #session['ids'] = ids
         # TODO: OK session['query_img_base64'] not set before fucking dropzone redirect... how do I wait until upload finished?
         #session['uploaded_image'] = uploaded_image
         # will redirect to query_image here because of dropzone
@@ -192,10 +191,16 @@ def query_image():
     #     query_img_base64, ids = process_image(session['uploaded_image'])
     #     session['query_img_base64'] = query_img_base64
     #     session['ids'] = ids
-    if session['query_img_base64'] is None:
-        #raise ValueError('WTF IT*S NONE right before display!!!')
-        print('NONE IMAGE FUCK')
-        #time.sleep(10)
+    # if session['query_img_base64'] is None:
+    #     #raise ValueError('WTF IT*S NONE right before display!!!')
+    #     print('NONE IMAGE FUCK')
+    #     #time.sleep(10)
+    if session['filename'] is not None:  # doing this here because of dropzone premature redirect
+        filename = os.path.join(app.config['UPLOADED_PATH'], session['filename'])
+        uploaded_image = Image.open(filename).convert('RGB')
+        query_img_base64, ids = process_image(uploaded_image)
+        session['query_img_base64'] = query_img_base64
+        session['ids'] = ids
     return render_template('query_image.html',
                            query_img=session['query_img_base64'],
                            ids=session['ids'],
