@@ -227,6 +227,10 @@ def process_image(img_):
     # bake in the segmentations to the PIL image:
     query_img_base64 = get_query_plot(img_, img_aug, session['results'], debug_mode=DEBUG_WITH_PREDS)
 
+    # try to catch weird None error:
+    if query_img_base64 is None:
+        raise ValueError('WTF query image is None!')
+
     # entity ids for HTML:
     labels = ['Image']
     labels += [str(i + 1) for i in range(len(session['results'].keys()) - 1)]
