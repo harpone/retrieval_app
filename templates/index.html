@@ -5,5 +5,5 @@
 <title>Upload File</title>
 {{ dropzone.create(action='index') }}
 {{ dropzone.load_js() }}
-{{ dropzone.config() }}
+{{ dropzone.config(custom_options="success: function(file, response){ window.location.href = '/query_image/' + response.message; }") }}
 {% endblock %}
