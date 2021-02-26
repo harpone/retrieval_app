@@ -49,7 +49,8 @@ app.config.update(
     DROPZONE_MAX_FILES=1,
     DROPZONE_REDIRECT_VIEW='query_image',  # set redirect view
     #DROPZONE_REDIRECT_VIEW=None,
-    DROPZONE_DEFAULT_MESSAGE='DROP IMAGE FILE HERE OR CLICK TO UPLOAD'
+    DROPZONE_DEFAULT_MESSAGE='DROP IMAGE FILE HERE OR CLICK TO UPLOAD',
+    DROPZONE_SERVE_LOCAL=True
 )
 
 bootstrap = Bootstrap(app)
@@ -152,11 +153,12 @@ def index():
     reset_session()
     if request.method == 'POST':
         f = request.files.get('file')  # hmm OK redirects right after this so no time to process the stuff below??
-        print('FILE OBTAINED')
+        # NOTE: getting exact same 'None' if file size exceeds max allowed!
+        print('FILE OBTAINED')  # FFUU this line is NEVER run for large images!!! so requests timeouts/ takes too long??
         #session['f'] = deepcopy(f)
         session['filename'] = f.filename
         print('SESSION FILENAME SAVED')
-        f.save(os.path.join(app.config['UPLOADED_PATH'], session['filename']))  # FFUU this line is NEVER run!
+        f.save(os.path.join(app.config['UPLOADED_PATH'], session['filename']))
         print('FILE SAVED')
         #uploaded_image = Image.open(f).convert('RGB')
         # if uploaded_image is None:
