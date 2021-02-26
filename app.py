@@ -50,7 +50,7 @@ app.config.update(
     UPLOADED_PATH='./static/cache',
     # Flask-Dropzone config:
     DROPZONE_ALLOWED_FILE_TYPE='image',
-    DROPZONE_MAX_FILE_SIZE=10,
+    DROPZONE_MAX_FILE_SIZE=100,
     DROPZONE_MAX_FILES=1,
     DROPZONE_REDIRECT_VIEW='query_image',  # set redirect view
     #DROPZONE_REDIRECT_VIEW=None,
