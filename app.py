@@ -67,7 +67,6 @@ def reset_session():
     session['images_ret'] = []
     session['urls_ret'] = []
     session['ids'] = dict()
-    session['uploaded_image'] = None
     session['query_img_base64'] = None
 
 
@@ -159,7 +158,11 @@ def index():
         if uploaded_image is None:
             flash('Upload size exceeded! Please only use smaller than 10MB size images.')
             redirect(url_for('index'))
-        session['uploaded_image'] = uploaded_image
+        query_img_base64, ids = process_image(uploaded_image)
+        session['query_img_base64'] = query_img_base64
+        session['ids'] = ids
+        #session['uploaded_image'] = uploaded_image
+        # will redirect to query_image here because of dropzone
     return render_template('index.html')
 
 
@@ -181,10 +184,10 @@ def query_image():
         images_ret, urls_ret = get_retrieval_plot(indices, entities)
         session['images_ret'] = images_ret
         session['urls_ret'] = urls_ret
-    elif session['uploaded_image'] is not None:  # uploaded photo
-        query_img_base64, ids = process_image(session['uploaded_image'])
-        session['query_img_base64'] = query_img_base64
-        session['ids'] = ids
+    # elif session['uploaded_image'] is not None:  # uploaded photo
+    #     query_img_base64, ids = process_image(session['uploaded_image'])
+    #     session['query_img_base64'] = query_img_base64
+    #     session['ids'] = ids
     return render_template('query_image.html',
                            query_img=session['query_img_base64'],
                            ids=session['ids'],
