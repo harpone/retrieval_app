@@ -194,8 +194,8 @@ def query_image():
     #     session['ids'] = ids
     if session['query_img_base64'] is None:
         #raise ValueError('WTF IT*S NONE right before display!!!')
-        print('Sleeping for 10 seconds...')
-        time.sleep(10)
+        print('NONE IMAGE FUCK')
+        #time.sleep(10)
     return render_template('query_image.html',
                            query_img=session['query_img_base64'],
                            ids=session['ids'],
