@@ -161,6 +161,9 @@ def index():
         query_img_base64, ids = process_image(uploaded_image)
         session['query_img_base64'] = query_img_base64
         session['ids'] = ids
+        
+        if session['query_img_base64'] is None:
+            raise ValueError('WTF IT*S NONE"!!!')
         #session['uploaded_image'] = uploaded_image
         # will redirect to query_image here because of dropzone
     return render_template('index.html')
