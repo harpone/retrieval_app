@@ -45,12 +45,11 @@ app.config.update(
     UPLOADED_PATH='./static/cache',
     # Flask-Dropzone config:
     DROPZONE_ALLOWED_FILE_TYPE='image',
-    DROPZONE_MAX_FILE_SIZE=10,
+    DROPZONE_MAX_FILE_SIZE=2,  # dropzone redirect bug if larger images...
     DROPZONE_MAX_FILES=1,
     DROPZONE_REDIRECT_VIEW='query_image',  # set redirect view
     #DROPZONE_REDIRECT_VIEW=None,
     DROPZONE_DEFAULT_MESSAGE='DROP IMAGE FILE HERE OR CLICK TO UPLOAD',
-    DROPZONE_SERVE_LOCAL=True
 )
 
 bootstrap = Bootstrap(app)
