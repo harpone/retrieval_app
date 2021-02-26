@@ -18,6 +18,7 @@
 + placeholder missing image in get_retrieval_plot
 + if uploaded_image == None, raise error or flash message! (exceeds 10MB upload limit)
 - now 3 cols on mobile portrait, 2 on landscape :/
+- can't handle pics that are actually short videos...
 
 
 - loading an NGTPY index 5M images/ 25M items takes quite a while, about 3 mins...
