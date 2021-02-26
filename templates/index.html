@@ -3,6 +3,7 @@
 
 {% block content %}
 <title>Upload File</title>
+<p>Please upload smaller than 2MB images!</p>
 {{ dropzone.create(action='index') }}
 {{ dropzone.load_js() }}
 {{ dropzone.config(custom_options="success: function(file, response){ window.location.href = '/query_image/' + response.message; }") }}
