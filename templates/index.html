@@ -3,8 +3,16 @@
 
 {% block content %}
 <title>Upload File</title>
-<p>Please upload smaller than 2MB images!</p>
-{{ dropzone.create(action='index') }}
+<p>Please upload only image files.</p>
+
+
+<form action="/" method="POST" enctype="multipart/form-data">
+    <input type=file name=file>
+    <button type="submit">Submit</button>
+</form>   
+
+
+<!-- {{ dropzone.create(action='index') }}
 {{ dropzone.load_js() }}
-{{ dropzone.config(custom_options="success: function(file, response){ window.location.href = '/query_image/' + response.message; }") }}
+{{ dropzone.config(custom_options="success: function(file, response){ window.location.href = '/query_image/' + response.message; }") }} -->
 {% endblock %}
