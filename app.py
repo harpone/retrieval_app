@@ -1,5 +1,5 @@
 import numpy as np
-from flask import Flask, render_template, request, url_for, redirect, flash, session
+from flask import Flask, render_template, request, url_for, redirect, session
 from flask_uploads import UploadSet, configure_uploads, IMAGES, patch_request_class
 from flask_session import Session
 from flask_bootstrap import Bootstrap
@@ -8,8 +8,6 @@ from werkzeug.exceptions import abort
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import SubmitField
-import time
-from copy import deepcopy
 import os
 import cv2
 from termcolor import colored
@@ -37,7 +35,6 @@ else:
 database_root = '/home/heka/model_data'
 
 app = Flask(__name__)
-#app.config['SECRET_KEY'] = 'asdfhbas7f3f3qoah'
 app.config.from_pyfile('configs/appconfig.py')  # TODO:
 app.config.update(
     SESSION_TYPE='filesystem',
@@ -45,7 +42,7 @@ app.config.update(
     UPLOADED_PATH='./static/cache',
     # Flask-Dropzone config:
     DROPZONE_ALLOWED_FILE_TYPE='image',
-    DROPZONE_MAX_FILE_SIZE=2,  # TODO: not raising error, just giving the None image bug!!!!!!
+    DROPZONE_MAX_FILE_SIZE=8,  # TODO: not raising error, just giving the None image bug!!!!!!
     DROPZONE_MAX_FILES=1,
     DROPZONE_REDIRECT_VIEW='query_image',  # set redirect view
     #DROPZONE_REDIRECT_VIEW=None,
