@@ -45,7 +45,7 @@ app.config.update(
     UPLOADED_PATH='./static/cache',
     # Flask-Dropzone config:
     DROPZONE_ALLOWED_FILE_TYPE='image',
-    DROPZONE_MAX_FILE_SIZE=2,  # dropzone redirect bug if larger images...
+    DROPZONE_MAX_FILE_SIZE=2,  # TODO: not raising error, just giving the None image bug!!!!!!
     DROPZONE_MAX_FILES=1,
     DROPZONE_REDIRECT_VIEW='query_image',  # set redirect view
     #DROPZONE_REDIRECT_VIEW=None,
@@ -153,12 +153,12 @@ def index():
     if request.method == 'POST':
         f = request.files.get('file')  # hmm OK redirects right after this so no time to process the stuff below??
         # NOTE: getting exact same 'None' if file size exceeds max allowed!
-        print('FILE OBTAINED')  # FFUU this line is NEVER run for large images!!! so requests timeouts/ takes too long??
+        #print('FILE OBTAINED')  # FFUU this line is NEVER run for large images!!! so requests timeouts/ takes too long??
         #session['f'] = deepcopy(f)
         session['filename'] = f.filename
-        print('SESSION FILENAME SAVED')
+        #print('SESSION FILENAME SAVED')
         f.save(os.path.join(app.config['UPLOADED_PATH'], session['filename']))
-        print('FILE SAVED')
+        #print('FILE SAVED')
         #uploaded_image = Image.open(f).convert('RGB')
         # if uploaded_image is None:
         #     flash('Upload size exceeded! Please only use smaller than 10MB size images.')
@@ -169,7 +169,7 @@ def index():
         # TODO: OK session['query_img_base64'] not set before fucking dropzone redirect... how do I wait until upload finished?
         #session['uploaded_image'] = uploaded_image
         # will redirect to query_image here because of dropzone
-        #return redirect(url_for('query_image'))  # not needed with dropzone!!
+        return redirect(url_for('query_image'))
     return render_template('index.html')
 
 

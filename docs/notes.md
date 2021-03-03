@@ -17,7 +17,9 @@
 + get rid of global variables with maybe a Result class or session or whatever
 + placeholder missing image in get_retrieval_plot
 + if uploaded_image == None, raise error or flash message! (exceeds 10MB upload limit)
-- shiit base64 enc images may not be a stellar idea... doesn't work with bigger images
+- fucking large image prob... not resolved!!
+  - maybe use JS to resize on device, then upload?
+  + going with simple upload button for now
 - now 3 cols on mobile portrait, 2 on landscape :/
 - can't handle pics that are actually short videos...
 
