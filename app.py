@@ -23,7 +23,8 @@ from core.utils import get_query_plot, get_retrieval_plot
 
 DEBUGGING_WITHOUT_MODEL = False
 DEBUG_WITH_PREDS = False  # will show image, item preds in plots
-USE_DEV_DB = False
+USE_DEV_DB = True
+CUDA = False
 
 # Set up database:  # TODO: protect codes and index! Needs refactoring!! Actually maybe
 #database_name = 'open-images-dataset-train0_0_475000.h5'  # TODO: as arg maybe
@@ -110,7 +111,7 @@ if DEBUGGING_WITHOUT_MODEL:
     supermodel = None
 else:
     print(colored('Loading model...', 'green'))
-    supermodel = SuperModel()
+    supermodel = SuperModel(cuda=CUDA)
 
 # Def augs:
 augs = load_augs(resize_to=RESIZE_TO)

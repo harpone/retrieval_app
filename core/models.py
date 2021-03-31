@@ -225,12 +225,12 @@ class ConvLayer(nn.Module):
 
 class SuperModel(nn.Module):
 
-    def __init__(self):
+    def __init__(self, cuda=True):
         """Joint model combining SimCLR, detectron2 and the PCA.
 
         """
         super(SuperModel, self).__init__()
-
+        self.cuda = cuda
         # repnet:
         with torch.no_grad():
             self.repnet = resnet50x4()
@@ -238,7 +238,7 @@ class SuperModel(nn.Module):
             try:
                 state_dict = torch.load(repnet_pth)['state_dict']
             except Exception as e:
-                #print(e)  # TODO: catch and use
+                print(e)  # TODO: catch and use
                 print(colored('Local repnet checkpoint not found... downloading from GCS.', 'red'))
                 if not os.path.exists('./model_data/'):
                     os.makedirs('./model_data/', exist_ok=True)
@@ -247,12 +247,12 @@ class SuperModel(nn.Module):
                 state_dict = torch.load(repnet_pth)['state_dict']
             self.repnet.load_state_dict(state_dict)
             self.repnet.eval()
-            self.repnet.cuda()
+            self.repnet.cuda() if cuda else None
 
         # segnet:
         cfg_fname = 'COCO-PanopticSegmentation/panoptic_fpn_R_101_3x.yaml'
         cfg = get_cfg()
-        # cfg.MODEL.DEVICE = 'cpu'  # force CPU
+        cfg.MODEL.DEVICE = 'cpu' if not cuda else 'cuda'  # force CPU
         cfg.merge_from_file(model_zoo.get_config_file(cfg_fname))
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5  # set threshold for this model
         cfg.INPUT.MIN_SIZE_TEST = RESIZE_TO  # default is 800 and is pretty slow... NOTE should be same as in augs!!
@@ -303,8 +303,9 @@ class SuperModel(nn.Module):
         seg_masks = seg_masks[1:]
 
         # Representation:
-        logits, codes = self.repnet(
-            self.augs['augs_rep'](img_aug)[None].cuda())  # e.g. inp: [256, 416] out: [8192, 8, 13]
+        input = self.augs['augs_rep'](img_aug)[None]
+        input = input.cuda() if self.cuda else input
+        logits, codes = self.repnet(input)  # e.g. inp: [256, 416] out: [8192, 8, 13]
         pred_img = int(logits[0].argmax().cpu())  # TODO: sanity check several of these
         codes = codes[0].detach().cpu().numpy()  # e.g. shape [8192, 8, 13]
 
