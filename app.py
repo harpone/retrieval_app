@@ -151,7 +151,6 @@ def index():
     if request.method == 'POST':
         f = request.files.get('file')  # hmm OK redirects right after this so no time to process the stuff below??
         # NOTE: getting exact same 'None' if file size exceeds max allowed!
-        #print('FILE OBTAINED')  # FFUU this line is NEVER run for large images!!! so requests timeouts/ takes too long??
         #session['f'] = deepcopy(f)
         session['filename'] = f.filename
         #print('SESSION FILENAME SAVED')
@@ -164,7 +163,6 @@ def index():
         #query_img_base64, ids = process_image(uploaded_image)
         #session['query_img_base64'] = query_img_base64
         #session['ids'] = ids
-        # TODO: OK session['query_img_base64'] not set before fucking dropzone redirect... how do I wait until upload finished?
         #session['uploaded_image'] = uploaded_image
         # will redirect to query_image here because of dropzone
         return redirect(url_for('query_image'))
