@@ -24,6 +24,12 @@
 - can't handle pics that are actually short videos...
 
 
-- loading an NGTPY index 5M images/ 25M items takes quite a while, about 3 mins...
-- also model takes a long time to load on K80 GPU, about 2 min - quite a bit faster on my GTX1080Ti
++ also model takes a long time to load on K80 GPU, about 2 min - quite a bit faster on my GTX1080Ti
++ on CPU: 4CPU/40G RAM: $0.269 hourly, about $200/month - works barely, a bit slow - shit still sometimes OOM
+- maybe try modern CPUs
+- drop background classes!
 - maybe use https
+
+## Optimize index
+- loading an NGTPY index 5M images/ 25M items takes quite a while, about 3 mins...
+- maybe implement hashing to reduce RAM
