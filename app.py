@@ -23,7 +23,7 @@ from core.utils import get_query_plot, get_retrieval_plot
 
 DEBUGGING_WITHOUT_MODEL = False
 DEBUG_WITH_PREDS = False  # will show image, item preds in plots
-USE_DEV_DB = True
+USE_DEV_DB = False
 CUDA = False
 
 # Set up database:  # TODO: protect codes and index! Needs refactoring!! Actually maybe
