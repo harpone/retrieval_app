@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>{% block title %} {{ entity['prediction_image'] }} {% endblock %}</h2>
+    <span class="badge badge-primary">{{ entity['prediction_item'] }}</span>
+    <p>{{ entity['url'] }}</p>
+{% endblock %}

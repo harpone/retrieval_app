@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <p1>Each colored region is numbered, and corresponds to the numbered buttons above the image. Click the number button to search for things
+        similar to the corresponding thing, or click on the "Image" button to search for similar images.
+    </p1>
+    <p1>Bullseye symbol marks the matching entity. If it is missing, then the entire image is the match.
+        The current database has only aroun 5M social media images from Flickr, so there may not be a very good match
+        for rare images... 
+    </p1>
+    <style>
+        img {
+            width: 50%;
+            height: auto;
+            max-width: 25vw;
+        }
+        </style>
+    <form class="form-inline" method="post" action="/query_image">
+        <button type="submit" name="back" class="btn btn-sm btn-primary">Back</button> &nbsp;
+        {% for label, num in ids.items() %}
+            <button type="submit" name={{ num }} class="btn btn-sm btn-primary">{{ label }}</button> &nbsp;
+        {% endfor %}
+      </form>
+    
+    <section id="photos">
+    <div class="img">
+        <img src="data:image/png;base64,{{ query_img }}"/>
+        {% for image_ret, image_url in images_urls %}
+            <a href="{{ image_url }}">
+                <img src="data:image/png;base64,{{ image_ret }}" alt=""/>
+            </a>
+        {% endfor %}
+    </div>
+    </section>
+
+</html>
+{% endblock %}

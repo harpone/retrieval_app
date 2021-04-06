@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+
+<h2>External JavaScript</h2>
+
+<p id="demo">A paragraph.</p>
+
+<button type="button" onclick="testFunction('demo')">Try it!</button>
+
+<p>fff</p>
+
+<img id="catpic" src="../testfig.jpeg"/>
+
+<script type="module">
+import testFunction from '../static/js/imagetools.js';  // works when importing from test.js, not from imagetools.js!!
+const testFunction = new testFunction();
+window.testFunction = testFunction  // need to expose function to window object!!
+//testFunction('demo')  // works when imported from test.js, not from imagetools.js!
+</script>
+
+
+</body>
+</html>

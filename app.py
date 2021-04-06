@@ -21,7 +21,7 @@ from core.augs import load_augs
 from core.config import RESIZE_TO, N_RETRIEVED_RESULTS
 from core.utils import get_query_plot, get_retrieval_plot
 
-DEBUGGING_WITHOUT_MODEL = False
+DEBUGGING_WITHOUT_MODEL = True
 DEBUG_WITH_PREDS = False  # will show image, item preds in plots
 USE_DEV_DB = True
 CUDA = False
