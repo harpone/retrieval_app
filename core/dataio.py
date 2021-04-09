@@ -24,6 +24,9 @@ from core.config import CODE_LENGTH
 import core.utils as utils
 
 
+
+
+
 def collate_openimages(batch):
     """Packs `imgs` and `masks` to a minibatch tensor.
     :param batch: list of (image, target)
@@ -726,7 +729,8 @@ class Database:
                     code[None],
                     h=entity["h"],
                     w=entity["w"],
-                    pred=entity["pred"],
+                    pred=entity["pred"],from core.dataio import image_from_url
+
                     is_thing=entity["is_thing"],
                 )
                 i += 1
