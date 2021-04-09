@@ -10,6 +10,48 @@ import torchvision.transforms as transforms
 from core.config import MAX_MASK_SIDE, MIN_MASK_SIDE
 
 
+def patch_cut(x, patch_size):
+    """Splits an image to patches of size `patch_size`.
+    :param x: shape [B, C, H, W]
+    :return x_patches: shape [patch_size ** 2 * B, 3, patch_size, patch_size]
+
+    Args:
+        x (torch.tensor): shape [B, C, H, W]
+        patch_size (int): square patch width and height
+
+    Returns:
+        torch.tensor: shape [H // patch_size * W // patch_size * B, 3, patch_size, patch_size]
+    """
+    # TODO: enforce divisible by `patch_size`
+    B, C, H, W = x.shape
+    x_patches = x.reshape(B, C, H // patch_size, patch_size, W // patch_size, patch_size)
+    x_patches = x_patches.permute(0, 1, 2, 4, 3, 5)  # [B, C, H // patch_size, W // patch_size, patch_size, patch_size]
+    x_patches = x_patches.reshape(-1, C, patch_size, patch_size)
+
+    return x_patches
+
+
+def patch_parse(img_patches, height, width):
+    """Parses image patches created by `patch_cut` back to an image/ feature map.
+
+    Args:
+        img_patches (torch.tensor): shape [H // patch_size * W // patch_size * B, 3, patch_size, patch_size]
+        height (int): H_image // patch_size; needed for reconstruction
+        width (int): W_image // patch_size; needed for reconstruction
+
+    Returns:
+        torch.tensor: reconstructed image tensor of shape [B, C, H, W]
+    """
+    # TODO: doesn't enforce shapes
+    batch_times_patches, C, patch_size = img_patches.shape[:3]
+    batch_size = batch_times_patches // (height * width)
+    img_recon = img_patches.reshape(batch_size, C, height, width, patch_size, patch_size)
+    img_recon = img_recon.permute(0, 1, 2, 4, 3, 5)  # [B, C, H/p, p, W/p, p]
+    img_recon = img_recon.reshape(batch_size, C, height * patch_size, width * patch_size)
+
+    return img_recon
+
+
 class ResizeToMultiple(object):
     """Resize the input PIL Image's shorter side to the nearest multiple of `multiple`.
 

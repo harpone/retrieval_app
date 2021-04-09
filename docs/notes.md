@@ -18,7 +18,7 @@
 + placeholder missing image in get_retrieval_plot
 + if uploaded_image == None, raise error or flash message! (exceeds 10MB upload limit)
 - fucking large image prob... not resolved!!
-  - maybe use JS to resize on device, then upload?
+  - maybe use JS to resize on device, then upload? A bit tricky... leave for later
   + going with simple upload button for now
 - now 3 cols on mobile portrait, 2 on landscape :/
 - can't handle pics that are actually short videos...
@@ -30,6 +30,14 @@
 - drop background classes!
 - maybe use https
 
+
+## Improved model:
+- Better self-sup pretrained backbone
+- Test feature diffusion!
+- Top coding and segmentation nets OR feature diffusion etc
+
 ## Optimize index
 - loading an NGTPY index 5M images/ 25M items takes quite a while, about 3 mins...
 - maybe implement hashing to reduce RAM
+- Actually, if codes are uniform in [0, 1] then simple scale and cast to uint8 should already be good and 4x smaller than float32 (only!!)
+  - not sure if e.g. NGTPY support uint8... but supports float16 I think
