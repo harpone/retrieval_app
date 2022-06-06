@@ -24,7 +24,7 @@
 - can't handle pics that are actually short videos...
 
 
-+ also model takes a long time to load on K80 GPU, about 2 min - quite a bit faster on my GTX1080Ti
++ also model takes a long time to load on K80 GPU, about 2 min - quite a bit faster on GTX1080Ti
 + on CPU: 4CPU/40G RAM: $0.269 hourly, about $200/month - works barely, a bit slow - shit still sometimes OOM
 - maybe try modern CPUs
 - drop background classes!
